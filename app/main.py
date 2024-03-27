@@ -1,5 +1,9 @@
 import socket
+import logging
+import sys
 
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -14,9 +18,9 @@ def main():
             msg = data.decode()
             if not msg:
                 break
-            print(f"Received {msg}")
+            logger.info(f"Received {msg}")
             conn.sendall("+PONG\r\n".encode())
-            print("Sent +PONG")
+            logger.info("Sent +PONG")
 
 
 if __name__ == "__main__":
