@@ -18,7 +18,7 @@ async def handle_client(reader, writer):
         command = await async_parse(request)
         logger.info(f"Got Message: {command}")
 
-        writer.write("+PONG\r\n".encode())
+        writer.write(command.encode().encode())
 
         try:
             await writer.drain()
