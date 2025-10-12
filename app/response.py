@@ -25,8 +25,8 @@ class ParsedCommand:
     args: List[str]
     response: Optional[str]
 
-    def encode(self):
-        return encode(self.response)
+    def encode(self) -> str:
+        return encode(self.response or "")
 
 
 async def async_parse(msg: str) -> ParsedCommand:
