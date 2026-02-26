@@ -37,6 +37,7 @@ def parse(msg: str) -> ParsedCommand:
     """
     Parses a decoded message from Redis, and returns a list of items
     """
+
     parsed_list = msg.split("\r\n")
 
     parsed_list = [
