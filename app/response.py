@@ -6,6 +6,9 @@ from collections import defaultdict
 
 CACHE = defaultdict(str)
 SIMPLE_OK = "+OK\r\n"
+SIMPLE_PONG = "+PONG\r\n"
+
+SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG}
 
 
 class Command(Enum):
@@ -64,7 +67,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
     match command:
         case Command.Ping:
-            return ParsedCommand(command=Command.Ping, args=rest, response="PONG")
+            return ParsedCommand(command=Command.Ping, args=rest, response=SIMPLE_PONG)
         case Command.Echo:
             return ParsedCommand(
                 command=Command.Echo, args=rest, response=" ".join(rest)
@@ -99,7 +102,7 @@ def _get_key(key: str) -> str:
 
 def encode(msg: str) -> str:
 
-    if msg is SIMPLE_OK:
+    if msg in SIMPLE_RESPONSES:
         return msg
 
     return "\r\n".join([f"${len(msg)}", msg, ""])
