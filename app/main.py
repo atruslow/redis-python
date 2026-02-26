@@ -16,7 +16,7 @@ async def handle_client(reader, writer):
         request = (await reader.read(1024)).decode("utf8")
 
         if not request:
-            continue
+            break
 
         command = await async_parse(request)
         logger.info(f"Got Message: {command}")

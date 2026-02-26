@@ -2,12 +2,17 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
+from collections import defaultdict
+
+CACHE = defaultdict(str)
 
 
 class Command(Enum):
     Ping = 1
     Echo = 2
-
+    Set = 3
+    Get = 4
+ 
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
         match cmd.lower():
@@ -15,6 +20,10 @@ class Command(Enum):
                 return cls.Ping
             case "echo":
                 return cls.Echo
+            case "set":
+                return cls.Set
+            case "get":
+                return cls.Get
             case _:
                 raise RuntimeError("Bad Command")
 
@@ -59,9 +68,33 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             return ParsedCommand(
                 command=Command.Echo, args=rest, response=" ".join(rest)
             )
+        case Command.Set:
+            key, value = rest
+            _set_key(key, value)
+            
+            return ParsedCommand(
+                command=Command.Set, args=rest, response="OK"
+            )
+        case Command.Get:
+
+            key, = rest
+            value = _get_key(key)
+
+            print(key, value)
+
+            return ParsedCommand(
+                command=Command.Get, args=rest, response=value
+            )
         case _:
             raise RuntimeError("Bad Command")
 
+
+def _set_key(key: str, value: str) -> str:
+    CACHE[key] = value
+    return CACHE[key]
+
+def _get_key(key: str) -> str:
+    return CACHE[key]
 
 def encode(msg: str) -> str:
     return "\r\n".join([f"${len(msg)}", msg, ""])
