@@ -5,6 +5,7 @@ from typing import List, Optional
 from collections import defaultdict
 
 CACHE = defaultdict(str)
+SIMPLE_OK = "+OK\r\n"
 
 
 class Command(Enum):
@@ -73,7 +74,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             _set_key(key, value)
             
             return ParsedCommand(
-                command=Command.Set, args=rest, response="OK"
+                command=Command.Set, args=rest, response=SIMPLE_OK
             )
         case Command.Get:
 
@@ -97,4 +98,8 @@ def _get_key(key: str) -> str:
     return CACHE[key]
 
 def encode(msg: str) -> str:
+
+    if msg is SIMPLE_OK:
+        return msg
+
     return "\r\n".join([f"${len(msg)}", msg, ""])
