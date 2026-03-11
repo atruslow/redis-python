@@ -93,18 +93,21 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             )
         case Command.Set:
             key, *value = rest
+            set_value = value[0]
+            exp_milisec = None
 
             if "ex" in [i.lower() for i in value]:
                 exp_milisec = int(value[-1]) * 1000
-                set_value = value[0]
-
-                _set_key(key, set_value, exp=exp_milisec)
 
             if "px" in [i.lower() for i in value]:
                 exp_milisec = int(value[-1])
-                set_value = value[0]
+            
 
-                _set_key(key, set_value, exp=int(exp_milisec))
+            _set_key(key, set_value, exp=exp_milisec)
+
+            return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
+
+
 
             return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
         case Command.Get:

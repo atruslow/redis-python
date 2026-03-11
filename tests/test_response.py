@@ -3,7 +3,7 @@ from app import response
 
 def test_response_parses():
     assert response.parse("*1\r\n$4\r\nping\r\n") == response.ParsedCommand(
-        command=response.Command.Ping, args=[], response=""
+        command=response.Command.Ping, args=[], response="+PONG\r\n"
     )
 
 
