@@ -25,7 +25,10 @@ class CacheItem:
     @property
     def is_expired(self) -> bool:
 
-        return bool(self.expiry) and self.expiry < datetime.now(timezone.utc)
+        if not self.expiry:
+            return False
+
+        return self.expiry < datetime.now(timezone.utc)
 
 
 class Command(Enum):
