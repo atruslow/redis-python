@@ -9,8 +9,7 @@ from datetime import datetime, timedelta, timezone
 CACHE: Dict[str, "CacheItem"] = {}
 SIMPLE_OK = "+OK\r\n"
 SIMPLE_PONG = "+PONG\r\n"
-#SIMPLE_NIL = "$-1\r\n"
-SIMPLE_NIL = ""
+SIMPLE_NIL = "$-1\r\n"
 
 SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG}
 
@@ -26,7 +25,7 @@ class CacheItem:
     @property
     def is_expired(self) -> bool:
 
-        return bool(self.expiry) and self.expiry <= datetime.now(timezone.utc)
+        return bool(self.expiry) and self.expiry < datetime.now(timezone.utc)
 
 
 class Command(Enum):
