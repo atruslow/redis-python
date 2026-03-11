@@ -133,7 +133,7 @@ def _get_key(key: str) -> str:
     if key not in CACHE:
         return SIMPLE_NIL
 
-    if CACHE[key].is_expired:
+    if CACHE[key].expiry and CACHE[key].is_expired:
         del CACHE[key]
         return SIMPLE_NIL
 
