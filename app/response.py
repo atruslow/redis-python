@@ -9,7 +9,8 @@ from datetime import datetime, timedelta, timezone
 CACHE: Dict[str, "CacheItem"] = {}
 SIMPLE_OK = "+OK\r\n"
 SIMPLE_PONG = "+PONG\r\n"
-SIMPLE_NIL = "$-1\r\n"
+#SIMPLE_NIL = "$-1\r\n"
+SIMPLE_NIL = ""
 
 SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG}
 
