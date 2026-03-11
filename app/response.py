@@ -1,14 +1,31 @@
 import asyncio
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 
-CACHE = defaultdict(str)
+
+CACHE: Dict[str, "CacheItem"] = {}
 SIMPLE_OK = "+OK\r\n"
 SIMPLE_PONG = "+PONG\r\n"
+SIMPLE_NIL = "$-1\r\n"
 
 SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG}
+
+
+@dataclass
+class CacheItem:
+    value: str
+    expiry: Optional[datetime] = None
+
+    def set_expiry(self, exp: int) -> None:
+        self.expiry = datetime.now(timezone.utc) + timedelta(milliseconds=exp)
+
+    @property
+    def is_expired(self) -> bool:
+
+        return bool(self.expiry) and datetime.now(timezone.utc) <= self.expiry
 
 
 class Command(Enum):
@@ -16,7 +33,7 @@ class Command(Enum):
     Echo = 2
     Set = 3
     Get = 4
- 
+
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
         match cmd.lower():
@@ -51,7 +68,6 @@ def parse(msg: str) -> ParsedCommand:
     Parses a decoded message from Redis, and returns a list of items
     """
 
-
     parsed_list = msg.split("\r\n")
 
     parsed_list = [
@@ -74,31 +90,52 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             )
         case Command.Set:
             key, value = rest
-            _set_key(key, value)
-            
-            return ParsedCommand(
-                command=Command.Set, args=rest, response=SIMPLE_OK
-            )
-        case Command.Get:
 
-            key, = rest
+            if "ex" in [i.lower() for i in value]:
+                exp_sec = int(value[-1])
+                set_value = value[:-2]
+
+                _set_key(key, set_value, exp=int(exp_sec * 1000))
+
+            if "px" in [i.lower() for i in value]:
+                exp_sec = int(value[-1])
+                set_value = value[:-2]
+
+                _set_key(key, set_value, exp=int(exp_sec))
+
+            return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
+        case Command.Get:
+            (key,) = rest
             value = _get_key(key)
 
             print(key, value)
 
-            return ParsedCommand(
-                command=Command.Get, args=rest, response=value
-            )
+            return ParsedCommand(command=Command.Get, args=rest, response=value)
         case _:
             raise RuntimeError("Bad Command")
 
 
-def _set_key(key: str, value: str) -> str:
-    CACHE[key] = value
-    return CACHE[key]
+def _set_key(key: str, value: str, exp: Optional[int] = None) -> str:
+    cache_item = CacheItem(value=value)
+
+    if exp:
+        cache_item.set_expiry(exp)
+
+    CACHE[key] = cache_item
+    return CACHE[key].value
+
 
 def _get_key(key: str) -> str:
-    return CACHE[key]
+
+    if key not in CACHE:
+        return SIMPLE_NIL
+
+    if CACHE[key].is_expired:
+        del CACHE[key]
+        return SIMPLE_NIL
+
+    return CACHE[key].value
+
 
 def encode(msg: str) -> str:
 
