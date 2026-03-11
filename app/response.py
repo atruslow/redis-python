@@ -25,7 +25,7 @@ class CacheItem:
     @property
     def is_expired(self) -> bool:
 
-        return bool(self.expiry) and datetime.now(timezone.utc) <= self.expiry
+        return bool(self.expiry) and self.expiry <= datetime.now(timezone.utc)
 
 
 class Command(Enum):
@@ -89,19 +89,19 @@ def parse_command(msg: List[str]) -> ParsedCommand:
                 command=Command.Echo, args=rest, response=" ".join(rest)
             )
         case Command.Set:
-            key, value = rest
+            key, *value = rest
 
             if "ex" in [i.lower() for i in value]:
-                exp_sec = int(value[-1])
-                set_value = value[:-2]
+                exp_milisec = int(value[-1]) * 1000
+                set_value = value[0]
 
-                _set_key(key, set_value, exp=int(exp_sec * 1000))
+                _set_key(key, set_value, exp=exp_milisec)
 
             if "px" in [i.lower() for i in value]:
-                exp_sec = int(value[-1])
-                set_value = value[:-2]
+                exp_milisec = int(value[-1])
+                set_value = value[0]
 
-                _set_key(key, set_value, exp=int(exp_sec))
+                _set_key(key, set_value, exp=int(exp_milisec))
 
             return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
         case Command.Get:
