@@ -46,21 +46,8 @@ def parse_command(msg: List[str]) -> ParsedCommand:
                 command=Command.Echo, args=rest, response=" ".join(rest)
             )
         case Command.Set:
-            key, *value = rest
-            set_value = value[0]
-            exp_milisec = None
+            return command.set.handle_set(args)
 
-            if "ex" in [i.lower() for i in value]:
-                exp_milisec = int(value[-1]) * 1000
-
-            if "px" in [i.lower() for i in value]:
-                exp_milisec = int(value[-1])
-
-            set_key(key, set_value, exp=exp_milisec)
-
-            return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
-
-            return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
         case Command.Get:
             return get.handle_get(rest)
 
