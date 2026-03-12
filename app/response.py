@@ -5,15 +5,7 @@ from typing import Dict, List, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from app.command.const import Command, ParsedCommand
-from app.command import get, set
-from app.cache.cache import set_key
-
-
-SIMPLE_OK = "+OK\r\n"
-SIMPLE_PONG = "+PONG\r\n"
-SIMPLE_NIL = "$-1\r\n"
-
-SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG, SIMPLE_NIL}
+from app.command import get, set, const
 
 
 async def async_parse(msg: str) -> ParsedCommand:
@@ -40,7 +32,9 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
     match command:
         case Command.Ping:
-            return ParsedCommand(command=Command.Ping, args=rest, response=SIMPLE_PONG)
+            return ParsedCommand(
+                command=Command.Ping, args=rest, response=const.SIMPLE_PONG
+            )
         case Command.Echo:
             return ParsedCommand(
                 command=Command.Echo, args=rest, response=" ".join(rest)
@@ -57,7 +51,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
 def encode(msg: str) -> str:
 
-    if msg in SIMPLE_RESPONSES:
+    if msg in const.SIMPLE_RESPONSES:
         return msg
 
     return "\r\n".join([f"${len(msg)}", msg, ""])
