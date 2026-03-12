@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from app.command.const import Command, ParsedCommand
 from app.command import get
-from app.cache.cache import CACHE, CacheItem
+from app.cache.cache import set_key
 
 
 SIMPLE_OK = "+OK\r\n"
@@ -56,7 +56,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             if "px" in [i.lower() for i in value]:
                 exp_milisec = int(value[-1])
 
-            _set_key(key, set_value, exp=exp_milisec)
+            set_key(key, set_value, exp=exp_milisec)
 
             return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
 
@@ -66,16 +66,6 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
         case _:
             raise RuntimeError("Bad Command")
-
-
-def _set_key(key: str, value: str, exp: Optional[int] = None) -> str:
-    cache_item = CacheItem(value=value)
-
-    if exp:
-        cache_item.set_expiry(exp)
-
-    CACHE[key] = cache_item
-    return CACHE[key].value
 
 
 def encode(msg: str) -> str:

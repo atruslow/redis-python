@@ -33,3 +33,13 @@ def get_key(key: str) -> Optional[str]:
         return None
 
     return CACHE[key].value
+
+
+def set_key(key: str, value: str, exp: Optional[int] = None) -> str:
+    cache_item = CacheItem(value=value)
+
+    if exp:
+        cache_item.set_expiry(exp)
+
+    CACHE[key] = cache_item
+    return CACHE[key].value
