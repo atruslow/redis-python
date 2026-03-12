@@ -6,31 +6,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from app.command.const import Command, ParsedCommand
 from app.command import get
+from app.cache.cache import CACHE, CacheItem
 
 
-CACHE: Dict[str, "CacheItem"] = {}
 SIMPLE_OK = "+OK\r\n"
 SIMPLE_PONG = "+PONG\r\n"
 SIMPLE_NIL = "$-1\r\n"
 
 SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG, SIMPLE_NIL}
-
-
-@dataclass
-class CacheItem:
-    value: str
-    expiry: Optional[datetime] = None
-
-    def set_expiry(self, exp: int) -> None:
-        self.expiry = datetime.now(timezone.utc) + timedelta(milliseconds=exp)
-
-    @property
-    def is_expired(self) -> bool:
-
-        if not self.expiry:
-            return False
-
-        return self.expiry < datetime.now(timezone.utc)
 
 
 async def async_parse(msg: str) -> ParsedCommand:
