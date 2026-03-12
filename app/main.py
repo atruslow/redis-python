@@ -41,12 +41,10 @@ async def run_server(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-
-
     parser = argparse.ArgumentParser(
-                    prog='Redis in Python',
-                    description='Toy Redis Implementation in Python')
+        prog="Redis in Python", description="Toy Redis Implementation in Python"
+    )
 
-    parser.add_argument('-p', '--port', default=REDIS_PORT)
+    parser.add_argument("-p", "--port", default=REDIS_PORT)
 
     asyncio.run(run_server(parser.parse_args()))
