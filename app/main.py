@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 import asyncio
@@ -32,12 +33,20 @@ async def handle_client(reader, writer):
     writer.close()
 
 
-async def run_server():
-    server = await asyncio.start_server(handle_client, "localhost", REDIS_PORT)
+async def run_server(args: argparse.Namespace):
+    server = await asyncio.start_server(handle_client, "localhost", args.port)
     async with server:
         logger.info("Starting Server")
         await server.serve_forever()
 
 
 if __name__ == "__main__":
-    asyncio.run(run_server())
+
+
+    parser = argparse.ArgumentParser(
+                    prog='Redis in Python',
+                    description='Toy Redis Implementation in Python')
+
+    parser.add_argument('-p', '--port', default=REDIS_PORT)
+
+    asyncio.run(run_server(parser.parse_args()))
