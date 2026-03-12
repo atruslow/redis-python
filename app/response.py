@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from app.command.const import Command, ParsedCommand
-from app.command import get
+from app.command import get, set
 from app.cache.cache import set_key
 
 
@@ -46,7 +46,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
                 command=Command.Echo, args=rest, response=" ".join(rest)
             )
         case Command.Set:
-            return command.set.handle_set(args)
+            return set.handle_set(rest)
 
         case Command.Get:
             return get.handle_get(rest)
