@@ -4,6 +4,8 @@ from enum import Enum
 from typing import Dict, List, Optional
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from app.command.const import Command, ParsedCommand
+from app.command import get
 
 
 CACHE: Dict[str, "CacheItem"] = {}
@@ -29,37 +31,6 @@ class CacheItem:
             return False
 
         return self.expiry < datetime.now(timezone.utc)
-
-
-class Command(Enum):
-    Ping = 1
-    Echo = 2
-    Set = 3
-    Get = 4
-
-    @classmethod
-    def get_command(cls, cmd: str) -> "Command":
-        match cmd.lower():
-            case "ping":
-                return cls.Ping
-            case "echo":
-                return cls.Echo
-            case "set":
-                return cls.Set
-            case "get":
-                return cls.Get
-            case _:
-                raise RuntimeError("Bad Command")
-
-
-@dataclass
-class ParsedCommand:
-    command: Command
-    args: List[str]
-    response: Optional[str]
-
-    def encode(self) -> str:
-        return encode(self.response or "")
 
 
 async def async_parse(msg: str) -> ParsedCommand:
@@ -108,12 +79,8 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
             return ParsedCommand(command=Command.Set, args=rest, response=SIMPLE_OK)
         case Command.Get:
-            (key,) = rest
-            value = _get_key(key)
+            return get.handle_get(rest)
 
-            print(key, value)
-
-            return ParsedCommand(command=Command.Get, args=rest, response=value)
         case _:
             raise RuntimeError("Bad Command")
 
@@ -125,18 +92,6 @@ def _set_key(key: str, value: str, exp: Optional[int] = None) -> str:
         cache_item.set_expiry(exp)
 
     CACHE[key] = cache_item
-    return CACHE[key].value
-
-
-def _get_key(key: str) -> str:
-
-    if key not in CACHE:
-        return SIMPLE_NIL
-
-    if CACHE[key].is_expired:
-        del CACHE[key]
-        return SIMPLE_NIL
-
     return CACHE[key].value
 
 
