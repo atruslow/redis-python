@@ -1,8 +1,10 @@
 from dataclasses import asdict, dataclass
 from enum import StrEnum, auto
-from typing import List
+from typing import List, Optional
 
 from app.command.const import Command, ParsedCommand
+
+REPLICATION_INFO: Optional["ReplicationInfo"] = None
 
 class ReplicationRole(StrEnum):
     MASTER = auto()
@@ -30,7 +32,16 @@ def handle_info(args: List[str]) -> ParsedCommand:
     """
     Returns the info requested from an INFO command
     """
-    
-    info = ReplicationInfo()
+
+    info = set_or_get_info()
 
     return ParsedCommand(command=Command.Info, args=args, response=str(info))
+
+def set_or_get_info(**kwargs) -> ReplicationInfo:
+
+    global REPLICATION_INFO
+
+    if not REPLICATION_INFO:
+        REPLICATION_INFO = ReplicationInfo(**kwargs)
+    
+    return REPLICATION_INFO

@@ -3,6 +3,8 @@ import logging
 import sys
 import asyncio
 
+from app.command import info
+from app.command.info import ReplicationRole
 from app.response import async_parse
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -35,6 +37,11 @@ async def handle_client(reader, writer):
 
 async def run_server(args: argparse.Namespace):
     server = await asyncio.start_server(handle_client, "localhost", args.port)
+
+    is_master = args.replicaof is ReplicationRole.MASTER
+
+    info.set_or_get_info(role=ReplicationRole.MASTER if is_master else ReplicationRole.SLAVE)
+
     async with server:
         logger.info("Starting Server")
         await server.serve_forever()
@@ -46,5 +53,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("-p", "--port", default=REDIS_PORT)
+    parser.add_argument("--replicaof", default=ReplicationRole.MASTER)
 
     asyncio.run(run_server(parser.parse_args()))
