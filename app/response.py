@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 from app.command.const import Command, ParsedCommand
-from app.command import get, set, const
+from app.command import get, info, set, const
 
 
 async def async_parse(msg: str) -> ParsedCommand:
@@ -40,6 +40,9 @@ def parse_command(msg: List[str]) -> ParsedCommand:
 
         case Command.Get:
             return get.handle_get(rest)
+
+        case Command.Info:
+            return info.handle_info(rest)
 
         case _:
             raise RuntimeError("Bad Command")

@@ -14,6 +14,7 @@ class Command(Enum):
     Echo = 2
     Set = 3
     Get = 4
+    Info = 5
 
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
@@ -26,6 +27,8 @@ class Command(Enum):
                 return cls.Set
             case "get":
                 return cls.Get
+            case "info":
+                return cls.Info
             case _:
                 raise RuntimeError("Bad Command")
 
