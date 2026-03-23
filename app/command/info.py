@@ -35,7 +35,7 @@ def handle_info(args: List[str]) -> ParsedCommand:
 
     info = set_or_get_info()
 
-    return ParsedCommand(command=Command.Info, args=args, response=str(info))
+    return ParsedCommand(command=Command.Info, args=args, response=str(info).encode())
 
 def set_or_get_info(**kwargs) -> ReplicationInfo:
 

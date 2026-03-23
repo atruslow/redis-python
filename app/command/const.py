@@ -2,11 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
-SIMPLE_OK = "+OK\r\n"
-SIMPLE_PONG = "+PONG\r\n"
-SIMPLE_NIL = "$-1\r\n"
-
-SIMPLE_RESPONSES = {SIMPLE_OK, SIMPLE_PONG, SIMPLE_NIL}
+from app.parser.parser import RESPValue
+from app.parser import parser as resp_parser
 
 
 class Command(Enum):
@@ -37,15 +34,7 @@ class Command(Enum):
 class ParsedCommand:
     command: Command
     args: List[str]
-    response: Optional[str]
+    response: Optional[RESPValue]
 
-    def encode(self) -> str:
-        return encode(self.response or "")
-
-
-def encode(msg: str) -> str:
-
-    if msg in SIMPLE_RESPONSES:
-        return msg
-
-    return "\r\n".join([f"${len(msg)}", msg, ""])
+    def encode(self) -> bytes:
+        return resp_parser.encode(self.response)
