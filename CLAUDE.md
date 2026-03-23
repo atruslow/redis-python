@@ -61,3 +61,7 @@ The server is single-process, async (asyncio). Each client connection is handled
 - Simple responses (`+OK\r\n`, `+PONG\r\n`, `$-1\r\n`) are passed through as-is by `encode()`
 - Bulk strings are encoded as `$<len>\r\n<data>\r\n`
 - The parser strips `*` (array count) and `$` (bulk length) lines, leaving only the command tokens
+
+## Python Style
+
+Don't use `assert` outside of tests. Example, don't use `assert isinstance(tokens, list)`.
