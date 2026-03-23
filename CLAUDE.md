@@ -1,0 +1,63 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+This is a [CodeCrafters](https://codecrafters.io) challenge project: a toy Redis implementation in Python using `asyncio`. The server is invoked via `spawn_redis_server.sh` (which CodeCrafters uses for testing) and accepts standard Redis wire protocol (RESP).
+
+## Commands
+
+**Run the server:**
+```sh
+python3 -m app.main -p 6379
+python3 -m app.main -p 6380 --replicaof slave  # run as replica
+```
+
+**Run tests:**
+```sh
+python3 -m pytest
+python3 -m pytest tests/test_response.py  # single test file
+python3 -m pytest -k test_response_parses  # single test by name
+```
+
+**Type checking:**
+```sh
+mypy .
+```
+
+**Manual testing with redis-cli:**
+```sh
+redis-cli -p 6379 ping
+redis-cli -p 6379 set foo bar px 1000
+redis-cli -p 6379 get foo
+redis-cli -p 6379 info replication
+```
+
+## Architecture
+
+The server is single-process, async (asyncio). Each client connection is handled by `handle_client` in `app/main.py`, which reads raw RESP frames, passes them through the parsing pipeline, and writes back the encoded response.
+
+**Request flow:**
+1. `app/main.py:handle_client` — reads raw bytes from socket
+2. `app/response.py:async_parse` → `parse` — splits RESP frame, strips array/bulk-string prefixes (`*`, `$`), extracts command tokens
+3. `app/response.py:parse_command` — dispatches to per-command handlers based on `Command` enum
+4. Command handler returns a `ParsedCommand(command, args, response)` dataclass
+5. `ParsedCommand.encode()` wraps the response string in RESP bulk-string format before writing back
+
+**Key modules:**
+- `app/command/const.py` — `Command` enum, `ParsedCommand` dataclass, RESP simple-response constants (`+OK\r\n`, `+PONG\r\n`, `$-1\r\n`), and the `encode()` helper
+- `app/command/set.py` / `get.py` — SET (with EX/PX expiry) and GET handlers
+- `app/command/info.py` — INFO command; holds a module-level `REPLICATION_INFO` singleton (`ReplicationInfo` dataclass) initialized once at server start with the role and replication metadata
+- `app/cache/cache.py` — in-memory `CACHE` dict of `CacheItem` objects with optional UTC expiry; expiry is checked lazily on GET
+
+**Adding a new command:**
+1. Add a variant to `Command` enum and a `case` in `Command.get_command()` in `const.py`
+2. Create a handler module under `app/command/` returning a `ParsedCommand`
+3. Add a `case` in `parse_command()` in `response.py`
+
+## RESP encoding notes
+
+- Simple responses (`+OK\r\n`, `+PONG\r\n`, `$-1\r\n`) are passed through as-is by `encode()`
+- Bulk strings are encoded as `$<len>\r\n<data>\r\n`
+- The parser strips `*` (array count) and `$` (bulk length) lines, leaving only the command tokens
