@@ -46,7 +46,9 @@ async def run_server(args: argparse.Namespace):
 
     # breakpoint()
 
-    info.set_or_get_info(role=ReplicationRole.MASTER if is_master else ReplicationRole.SLAVE)
+    info.set_or_get_info(
+        role=ReplicationRole.MASTER if is_master else ReplicationRole.SLAVE
+    )
 
     if not is_master:
         master_host, master_port = args.replicaof
@@ -64,7 +66,10 @@ async def run_server(args: argparse.Namespace):
 def _parse_host_port(arg_value: str) -> Tuple[str, str]:
     if m := HOST_PORT_RE.match(arg_value):
         return m.group("host"), m.group("port")
-    raise argparse.ArgumentTypeError(f"'{arg_value}' is an invalid value. Does not match pattern: {HOST_PORT_RE}")
+    raise argparse.ArgumentTypeError(
+        f"'{arg_value}' is an invalid value. Does not match pattern: {HOST_PORT_RE}"
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

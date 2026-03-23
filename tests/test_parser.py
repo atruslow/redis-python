@@ -19,6 +19,7 @@ from app.parser.parser import (
 # Parser — Simple String
 # ---------------------------------------------------------------------------
 
+
 class TestParseSimpleString:
     def test_ok(self):
         value, consumed = parse(b"+OK\r\n")
@@ -39,6 +40,7 @@ class TestParseSimpleString:
 # Parser — Error
 # ---------------------------------------------------------------------------
 
+
 class TestParseError:
     def test_basic(self):
         value, consumed = parse(b"-ERR unknown command\r\n")
@@ -54,6 +56,7 @@ class TestParseError:
 # ---------------------------------------------------------------------------
 # Parser — Integer
 # ---------------------------------------------------------------------------
+
 
 class TestParseInteger:
     def test_positive(self):
@@ -77,6 +80,7 @@ class TestParseInteger:
 # ---------------------------------------------------------------------------
 # Parser — Bulk String
 # ---------------------------------------------------------------------------
+
 
 class TestParseBulkString:
     def test_basic(self):
@@ -106,6 +110,7 @@ class TestParseBulkString:
 # ---------------------------------------------------------------------------
 # Parser — Array
 # ---------------------------------------------------------------------------
+
 
 class TestParseArray:
     def test_basic(self):
@@ -138,6 +143,7 @@ class TestParseArray:
 # Parser — parse_str
 # ---------------------------------------------------------------------------
 
+
 class TestParseStr:
     def test_simple_string(self):
         assert parse_str("+OK\r\n") == "OK"
@@ -157,6 +163,7 @@ class TestParseStr:
 # Parser — parse_all
 # ---------------------------------------------------------------------------
 
+
 class TestParseAll:
     def test_two_commands(self):
         data = b"+PONG\r\n+OK\r\n"
@@ -173,6 +180,7 @@ class TestParseAll:
 # ---------------------------------------------------------------------------
 # Parser — error conditions
 # ---------------------------------------------------------------------------
+
 
 class TestParseErrors:
     def test_empty_input(self):
@@ -192,6 +200,7 @@ class TestParseErrors:
 # Encoder — Simple String
 # ---------------------------------------------------------------------------
 
+
 class TestEncodeSimpleString:
     def test_basic(self):
         assert encode("OK") == b"+OK\r\n"
@@ -208,6 +217,7 @@ class TestEncodeSimpleString:
 # Encoder — Error
 # ---------------------------------------------------------------------------
 
+
 class TestEncodeError:
     def test_basic(self):
         assert encode(RESPError("ERR bad")) == b"-ERR bad\r\n"
@@ -216,6 +226,7 @@ class TestEncodeError:
 # ---------------------------------------------------------------------------
 # Encoder — Integer
 # ---------------------------------------------------------------------------
+
 
 class TestEncodeInteger:
     def test_positive(self):
@@ -231,6 +242,7 @@ class TestEncodeInteger:
 # ---------------------------------------------------------------------------
 # Encoder — Bulk String
 # ---------------------------------------------------------------------------
+
 
 class TestEncodeBulkString:
     def test_bytes(self):
@@ -249,6 +261,7 @@ class TestEncodeBulkString:
 # ---------------------------------------------------------------------------
 # Encoder — Array
 # ---------------------------------------------------------------------------
+
 
 class TestEncodeArray:
     def test_basic(self):
@@ -270,6 +283,7 @@ class TestEncodeArray:
 # Encoder — unsupported type
 # ---------------------------------------------------------------------------
 
+
 class TestEncodeUnsupported:
     def test_float_raises(self):
         with pytest.raises(TypeError):
@@ -280,19 +294,23 @@ class TestEncodeUnsupported:
 # Round-trip
 # ---------------------------------------------------------------------------
 
+
 class TestRoundTrip:
-    @pytest.mark.parametrize("value", [
-        "OK",
-        "hello world",
-        42,
-        -100,
-        0,
-        b"binary\x00data",
-        b"",
-        None,
-        ["OK", 1, b"bulk"],
-        [b"SET", b"key", b"value"],
-    ])
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "OK",
+            "hello world",
+            42,
+            -100,
+            0,
+            b"binary\x00data",
+            b"",
+            None,
+            ["OK", 1, b"bulk"],
+            [b"SET", b"key", b"value"],
+        ],
+    )
     def test_round_trip(self, value):
         encoded = encode(value)
         decoded, consumed = parse(encoded)

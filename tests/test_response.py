@@ -17,15 +17,17 @@ def test_respose_parses_echo():
 
 
 def test_response_parses_echo_multiple_words():
-    assert response.parse("*3\r\n$4\r\necho\r\n$5\r\nhello\r\n$5\r\nworld\r\n") == ParsedCommand(
+    assert response.parse(
+        "*3\r\n$4\r\necho\r\n$5\r\nhello\r\n$5\r\nworld\r\n"
+    ) == ParsedCommand(
         command=Command.Echo, args=["hello", "world"], response=b"hello world"
     )
 
 
 def test_response_parses_set():
-    assert response.parse("*3\r\n$3\r\nset\r\n$3\r\nfoo\r\n$3\r\nbar\r\n") == ParsedCommand(
-        command=Command.Set, args=["foo", "bar"], response="OK"
-    )
+    assert response.parse(
+        "*3\r\n$3\r\nset\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
+    ) == ParsedCommand(command=Command.Set, args=["foo", "bar"], response="OK")
 
 
 def test_response_parses_get_missing_key():
