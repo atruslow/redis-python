@@ -53,7 +53,7 @@ async def run_server(args: argparse.Namespace):
         logger.info(f"Connecting to master {master_host}:{master_port}")
         reader, writer = await asyncio.open_connection(master_host, master_port)
 
-        writer.write(resp_parser.encode("PING"))
+        writer.write(resp_parser.encode(["PING"]))
         await writer.drain()
 
     async with server:
