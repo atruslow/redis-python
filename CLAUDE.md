@@ -21,6 +21,12 @@ python3 -m pytest tests/test_response.py  # single test file
 python3 -m pytest -k test_response_parses  # single test by name
 ```
 
+**Formatting:**
+
+```sh
+ruff format
+```
+
 **Type checking:**
 ```sh
 mypy .

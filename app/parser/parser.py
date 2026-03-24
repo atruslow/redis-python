@@ -20,6 +20,7 @@ from typing import List, Optional, Union
 # Types
 # ---------------------------------------------------------------------------
 
+
 class RESPType(Enum):
     SIMPLE_STRING = "+"
     ERROR = "-"
@@ -35,6 +36,7 @@ RESPValue = Union[str, "RESPError", int, bytes, List["RESPValue"], None]
 @dataclass
 class RESPError:
     """Represents a RESP error (-prefix)."""
+
     message: str
 
     def __str__(self) -> str:
@@ -45,6 +47,7 @@ class RESPError:
 # Errors
 # ---------------------------------------------------------------------------
 
+
 class RESPParseError(ValueError):
     """Raised when the input does not conform to the RESP protocol."""
 
@@ -52,6 +55,7 @@ class RESPParseError(ValueError):
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
+
 
 def parse_str(data: str) -> RESPValue:
     """Convenience wrapper around ``parse`` that accepts a string instead of bytes."""
@@ -106,6 +110,7 @@ def parse_all(data: bytes) -> List[RESPValue]:
 
 
 # -- internal helpers -------------------------------------------------------
+
 
 def _read_line(data: bytes) -> tuple[bytes, int]:
     """Return ``(line_without_crlf, total_bytes_consumed)`` for the first line."""
@@ -175,6 +180,7 @@ def _parse_array(data: bytes) -> tuple[Optional[List[RESPValue]], int]:
 # Encoder
 # ---------------------------------------------------------------------------
 
+
 def encode(value: RESPValue) -> bytes:
     """
     Encode a Python value into its RESP wire representation.
@@ -210,6 +216,7 @@ def encode_bulk_string(value: str) -> bytes:
 
 
 # -- internal helpers -------------------------------------------------------
+
 
 def _encode_simple_string(value: str) -> bytes:
     if "\r" in value or "\n" in value:
