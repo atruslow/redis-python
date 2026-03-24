@@ -16,6 +16,7 @@ async def handshake(master_host: str, master_port: str, server_port: str) -> Non
     await _send(reader, writer, [b"PING"])
     await _send(reader, writer, [b"REPLCONF", b"listening-port", str(server_port).encode()])
     await _send(reader, writer, [b"REPLCONF", b"capa", b"psync2"])
+    await _send(reader, writer, [b"PSYNC", b"?", b"-1"])
 
     logger.info("Completed handshake with master")
     writer.close()
