@@ -11,7 +11,7 @@ This is a [CodeCrafters](https://codecrafters.io) challenge project: a toy Redis
 **Run the server:**
 ```sh
 python3 -m app.main -p 6379
-python3 -m app.main -p 6380 --replicaof slave  # run as replica
+python3 -m app.main -p 6380 --replicaof "localhost 6379"  # run as replica
 ```
 
 **Run tests:**
@@ -22,7 +22,6 @@ python3 -m pytest -k test_response_parses  # single test by name
 ```
 
 **Formatting:**
-
 ```sh
 ruff format
 ```
@@ -46,28 +45,34 @@ The server is single-process, async (asyncio). Each client connection is handled
 
 **Request flow:**
 1. `app/main.py:handle_client` — reads raw bytes from socket
-2. `app/response.py:async_parse` → `parse` — splits RESP frame, strips array/bulk-string prefixes (`*`, `$`), extracts command tokens
+2. `app/response.py:async_parse` → `parse` — uses `app/parser/parser.py` to parse the RESP frame, decodes bulk-string tokens to `str`
 3. `app/response.py:parse_command` — dispatches to per-command handlers based on `Command` enum
 4. Command handler returns a `ParsedCommand(command, args, response)` dataclass
-5. `ParsedCommand.encode()` wraps the response string in RESP bulk-string format before writing back
+5. `ParsedCommand.encode()` calls `resp_parser.encode()` and writes `bytes` back to the socket
 
 **Key modules:**
-- `app/command/const.py` — `Command` enum, `ParsedCommand` dataclass, RESP simple-response constants (`+OK\r\n`, `+PONG\r\n`, `$-1\r\n`), and the `encode()` helper
-- `app/command/set.py` / `get.py` — SET (with EX/PX expiry) and GET handlers
-- `app/command/info.py` — INFO command; holds a module-level `REPLICATION_INFO` singleton (`ReplicationInfo` dataclass) initialized once at server start with the role and replication metadata
+- `app/command/const.py` — `Command` (`StrEnum` with `auto()`, value = lowercase name), `ParsedCommand` dataclass; `encode()` delegates to `resp_parser`
+- `app/command/set.py` / `get.py` — SET (with EX/PX expiry parsed as option pairs) and GET handlers
+- `app/command/info.py` — INFO/PSYNC support; `init_info(**kwargs)` called once at startup, `get_info()` used by handlers; holds `ReplicationInfo` dataclass
 - `app/cache/cache.py` — in-memory `CACHE` dict of `CacheItem` objects with optional UTC expiry; expiry is checked lazily on GET
+- `app/parser/parser.py` — full RESP2 parser and encoder; `parse(bytes)` returns `(RESPValue, bytes_consumed)`, `encode(RESPValue)` returns `bytes`
+- `app/replica/handshake.py` — replica handshake sequence (PING → REPLCONF listening-port → REPLCONF capa → PSYNC)
 
 **Adding a new command:**
-1. Add a variant to `Command` enum and a `case` in `Command.get_command()` in `const.py`
+1. Add a variant to `Command` (`StrEnum`) in `const.py` — the value is automatically the lowercase name
 2. Create a handler module under `app/command/` returning a `ParsedCommand`
 3. Add a `case` in `parse_command()` in `response.py`
 
 ## RESP encoding notes
 
-- Simple responses (`+OK\r\n`, `+PONG\r\n`, `$-1\r\n`) are passed through as-is by `encode()`
-- Bulk strings are encoded as `$<len>\r\n<data>\r\n`
-- The parser strips `*` (array count) and `$` (bulk length) lines, leaving only the command tokens
+- `str` response → simple string (`+…\r\n`)
+- `bytes` response → bulk string (`$<len>\r\n…\r\n`)
+- `None` response → null bulk string (`$-1\r\n`)
+- `list` response → array (`*<len>\r\n…`)
+- All encoding/decoding goes through `app/parser/parser.py`
 
 ## Python Style
 
-Don't use `assert` outside of tests. Example, don't use `assert isinstance(tokens, list)`.
+- Don't use `assert` outside of tests
+- Run `ruff format` before committing
+- Run `mypy .` to check types — all files must pass cleanly
