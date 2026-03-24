@@ -1,12 +1,33 @@
+# Redis in Python
+
+A toy Redis server built as part of the [CodeCrafters](https://codecrafters.io) challenge. Implemented in Python using `asyncio`, it speaks the Redis wire protocol (RESP2) and supports both master and replica roles.
+
+## Supported Commands
+
+| Command | Notes |
+|---|---|
+| `PING` | Returns `+PONG` |
+| `ECHO <message>` | Returns the message as a bulk string |
+| `SET <key> <value> [EX seconds\|PX milliseconds]` | In-memory set with optional expiry |
+| `GET <key>` | Returns value or null bulk string |
+| `INFO replication` | Returns replication metadata |
+| `REPLCONF listening-port <port>` / `capa psync2` | Replica handshake |
+| `PSYNC <replication_id> <offset>` | Returns `+FULLRESYNC <replid> 0` |
+
+## Running
+
+**Master:**
+```sh
+python3 -m app.main -p 6379
 ```
 
-% exec python3 -m app.main  --help
-usage: Redis in Python [-h] [-p PORT]
+**Replica:**
+```sh
+python3 -m app.main -p 6380 --replicaof "localhost 6379"
+```
 
-Toy Redis Implementation in Python
+## Testing
 
-options:
-  -h, --help       show this help message and exit
-  -p, --port PORT
-
+```sh
+python3 -m pytest
 ```
