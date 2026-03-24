@@ -12,6 +12,7 @@ class Command(Enum):
     Set = 3
     Get = 4
     Info = 5
+    Replconf = 6
 
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
@@ -26,6 +27,8 @@ class Command(Enum):
                 return cls.Get
             case "info":
                 return cls.Info
+            case "replconf":
+                return cls.Replconf
             case _:
                 raise RuntimeError("Bad Command")
 
