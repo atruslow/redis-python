@@ -8,7 +8,7 @@ from typing import Tuple
 from app.command import info
 from app.command.info import ReplicationRole
 from app.response import async_parse
-from app.parser import parser as resp_parser
+from app.replica import handshake
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,11 +52,7 @@ async def run_server(args: argparse.Namespace):
 
     if not is_master:
         master_host, master_port = args.replicaof
-        logger.info(f"Connecting to master {master_host}:{master_port}")
-        reader, writer = await asyncio.open_connection(master_host, master_port)
-
-        writer.write(resp_parser.encode(["PING".encode("utf-8")]))
-        await writer.drain()
+        await handshake.handshake(master_host, master_port, args.port)
 
     async with server:
         logger.info(f"Starting Server on port {args.port}")

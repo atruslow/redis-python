@@ -54,9 +54,7 @@ def test_response_parses_replconf():
 def test_response_parses_replconf_capa_psync2():
     assert response.parse(
         "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
-    ) == ParsedCommand(
-        command=Command.Replconf, args=["capa", "psync2"], response="OK"
-    )
+    ) == ParsedCommand(command=Command.Replconf, args=["capa", "psync2"], response="OK")
 
 
 def test_response_non_array_raises():
