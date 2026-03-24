@@ -14,7 +14,9 @@ async def handshake(master_host: str, master_port: str, server_port: str) -> Non
     reader, writer = await asyncio.open_connection(master_host, master_port)
 
     await _send(reader, writer, [b"PING"])
-    await _send(reader, writer, [b"REPLCONF", b"listening-port", str(server_port).encode()])
+    await _send(
+        reader, writer, [b"REPLCONF", b"listening-port", str(server_port).encode()]
+    )
     await _send(reader, writer, [b"REPLCONF", b"capa", b"psync2"])
     await _send(reader, writer, [b"PSYNC", b"?", b"-1"])
 
