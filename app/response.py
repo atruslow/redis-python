@@ -7,7 +7,7 @@ from app.parser import parser as resp_parser
 
 
 async def async_parse(msg: str) -> ParsedCommand:
-    return await asyncio.get_event_loop().run_in_executor(None, parse, msg)
+    return await asyncio.get_running_loop().run_in_executor(None, parse, msg)
 
 
 def parse(msg: str) -> ParsedCommand:

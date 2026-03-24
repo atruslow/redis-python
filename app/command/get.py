@@ -2,9 +2,7 @@
 Module for handling the get command
 """
 
-from typing import List
-
-from typing import Optional
+from typing import List, Optional
 
 from app.cache import cache
 from app.command.const import Command, ParsedCommand

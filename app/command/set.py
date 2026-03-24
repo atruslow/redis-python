@@ -1,21 +1,22 @@
-from typing import List
+from typing import List, Optional
 
 from app.cache.cache import set_key
 from app.command.const import Command, ParsedCommand
 
 
 def handle_set(args: List[str]) -> ParsedCommand:
-
-    key, *value = args
-    set_value = value[0]
-    exp_milisec = None
-
-    if "ex" in [i.lower() for i in value]:
-        exp_milisec = int(value[-1]) * 1000
-
-    if "px" in [i.lower() for i in value]:
-        exp_milisec = int(value[-1])
-
+    key, set_value, *options = args
+    exp_milisec = _parse_expiry(options)
     set_key(key, set_value, exp=exp_milisec)
-
     return ParsedCommand(command=Command.Set, args=args, response="OK")
+
+
+def _parse_expiry(options: List[str]) -> Optional[int]:
+    it = iter(options)
+    for opt in it:
+        match opt.lower():
+            case "ex":
+                return int(next(it)) * 1000
+            case "px":
+                return int(next(it))
+    return None

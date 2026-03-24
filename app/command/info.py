@@ -23,8 +23,7 @@ class ReplicationInfo:
         return asdict(self)
 
     def __str__(self) -> str:
-
-        formatted_dict = "\r\n".join(
+        return "\r\n".join(
             [
                 f"{k}:{v}"
                 for k, v in self.as_dict().items()
@@ -32,24 +31,23 @@ class ReplicationInfo:
             ]
         )
 
-        return formatted_dict
-
 
 def handle_info(args: List[str]) -> ParsedCommand:
     """
     Returns the info requested from an INFO command
     """
+    return ParsedCommand(
+        command=Command.Info, args=args, response=str(get_info()).encode()
+    )
 
-    info = set_or_get_info()
 
-    return ParsedCommand(command=Command.Info, args=args, response=str(info).encode())
-
-
-def set_or_get_info(**kwargs) -> ReplicationInfo:
-
+def init_info(**kwargs) -> ReplicationInfo:
     global REPLICATION_INFO
+    REPLICATION_INFO = ReplicationInfo(**kwargs)
+    return REPLICATION_INFO
 
-    if not REPLICATION_INFO:
-        REPLICATION_INFO = ReplicationInfo(**kwargs)
 
+def get_info() -> ReplicationInfo:
+    if REPLICATION_INFO is None:
+        raise RuntimeError("ReplicationInfo has not been initialized")
     return REPLICATION_INFO

@@ -5,8 +5,7 @@ import asyncio
 import re
 from typing import Tuple
 
-from app.command import info
-from app.command.info import ReplicationRole
+from app.command.info import ReplicationRole, init_info
 from app.response import async_parse
 from app.replica import handshake
 
@@ -44,11 +43,7 @@ async def run_server(args: argparse.Namespace):
 
     is_master = args.replicaof is None
 
-    # breakpoint()
-
-    info.set_or_get_info(
-        role=ReplicationRole.MASTER if is_master else ReplicationRole.SLAVE
-    )
+    init_info(role=ReplicationRole.MASTER if is_master else ReplicationRole.SLAVE)
 
     if not is_master:
         master_host, master_port = args.replicaof
