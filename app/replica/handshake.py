@@ -17,7 +17,7 @@ async def handshake(master_host: str, master_port: str, server_port: str) -> Non
     writer.write(resp_parser.encode([b"PING"]))
     await writer.drain()
 
-    writer.write(resp_parser.encode([b"REPLCONF", b"listening-port", server_port]))
+    writer.write(resp_parser.encode([b"REPLCONF", b"listening-port", str(server_port).encode()]))
     await writer.drain()
 
     writer.write(resp_parser.encode([b"REPLCONF", b"capa", b"psync2"]))
