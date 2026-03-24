@@ -28,6 +28,8 @@ async def handle_client(reader, writer):
         logger.info(f"Got Message: {command}")
 
         writer.write(command.encode())
+        if command.raw_extra is not None:
+            writer.write(command.raw_extra)
 
         try:
             await writer.drain()

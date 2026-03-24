@@ -28,6 +28,7 @@ class ParsedCommand:
     command: Command
     args: List[str]
     response: Optional[RESPValue]
+    raw_extra: Optional[bytes] = None
 
     def encode(self) -> bytes:
         return resp_parser.encode(self.response)
