@@ -8,7 +8,7 @@ from app.cache import cache
 from app.command.const import Command, ParsedCommand
 
 
-def handle_get(args: List[str]) -> ParsedCommand:
+async def handle_get(args: List[str]) -> ParsedCommand:
 
     (key,) = args
     value = _get_key(key)

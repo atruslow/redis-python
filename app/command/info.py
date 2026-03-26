@@ -40,7 +40,7 @@ class ReplicationInfo:
         self.master_repl_offset += count
 
 
-def handle_info(args: List[str]) -> ParsedCommand:
+async def handle_info(args: List[str]) -> ParsedCommand:
     """
     Returns the info requested from an INFO command
     """

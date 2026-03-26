@@ -18,7 +18,7 @@ def _load_rdb() -> bytes:
     return f"${len(rdb)}\r\n".encode() + rdb
 
 
-def handle_psync(args: List[str]) -> ParsedCommand:
+async def handle_psync(args: List[str]) -> ParsedCommand:
     replication_id, offset = args
     logger.info(f"PSYNC replication_id={replication_id} offset={offset}")
 

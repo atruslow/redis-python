@@ -17,26 +17,25 @@ def clear_cache():
 # ---------------------------------------------------------------------------
 
 
-def test_handle_set_basic():
-    result = set_cmd.handle_set(["foo", "bar"])
+@pytest.mark.asyncio
+async def test_handle_set_basic():
+    result = await set_cmd.handle_set(["foo", "bar"])
     assert result == ParsedCommand(
         command=Command.Set, args=["foo", "bar"], response="OK"
     )
 
 
-def test_handle_set_px():
-    result = set_cmd.handle_set(["foo", "bar", "px", "5000"])
+@pytest.mark.asyncio
+async def test_handle_set_px():
+    result = await set_cmd.handle_set(["foo", "bar", "px", "5000"])
     assert result.response == "OK"
-    from app.cache.cache import CACHE
-
     assert CACHE["foo"].expiry is not None
 
 
-def test_handle_set_ex():
-    result = set_cmd.handle_set(["foo", "bar", "ex", "5"])
+@pytest.mark.asyncio
+async def test_handle_set_ex():
+    result = await set_cmd.handle_set(["foo", "bar", "ex", "5"])
     assert result.response == "OK"
-    from app.cache.cache import CACHE
-
     assert CACHE["foo"].expiry is not None
 
 
@@ -59,14 +58,16 @@ def test_parse_expiry_none():
 # ---------------------------------------------------------------------------
 
 
-def test_handle_get_existing():
-    set_cmd.handle_set(["foo", "bar"])
-    result = get_cmd.handle_get(["foo"])
+@pytest.mark.asyncio
+async def test_handle_get_existing():
+    await set_cmd.handle_set(["foo", "bar"])
+    result = await get_cmd.handle_get(["foo"])
     assert result.response == b"bar"
 
 
-def test_handle_get_missing():
-    result = get_cmd.handle_get(["missing"])
+@pytest.mark.asyncio
+async def test_handle_get_missing():
+    result = await get_cmd.handle_get(["missing"])
     assert result.response is None
 
 
@@ -75,23 +76,26 @@ def test_handle_get_missing():
 # ---------------------------------------------------------------------------
 
 
-def test_replconf_listening_port():
-    result = replconf.handle_replconf(["listening-port", "6380"])
+@pytest.mark.asyncio
+async def test_replconf_listening_port():
+    result = await replconf.handle_replconf(["listening-port", "6380"])
     assert result.response == "OK"
     assert not result.replication_response
 
 
-def test_replconf_getack_as_slave(initialize_info):
+@pytest.mark.asyncio
+async def test_replconf_getack_as_slave(initialize_info):
     from app.command.info import init_info
 
     init_info(role=ReplicationRole.SLAVE)
-    result = replconf.handle_replconf(["GETACK", "*"])
+    result = await replconf.handle_replconf(["GETACK", "*"])
     assert result.replication_response
     assert result.response == [b"REPLCONF", b"ACK", b"0"]
 
 
-def test_replconf_getack_as_master():
-    result = replconf.handle_replconf(["GETACK", "*"])
+@pytest.mark.asyncio
+async def test_replconf_getack_as_master():
+    result = await replconf.handle_replconf(["GETACK", "*"])
     assert result.response == "OK"
     assert not result.replication_response
 
@@ -101,13 +105,15 @@ def test_replconf_getack_as_master():
 # ---------------------------------------------------------------------------
 
 
-def test_original_command_set():
-    cmd = set_cmd.handle_set(["foo", "bar"])
+@pytest.mark.asyncio
+async def test_original_command_set():
+    cmd = await set_cmd.handle_set(["foo", "bar"])
     assert cmd.original_command == b"*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
 
 
-def test_original_command_set_with_px():
-    cmd = set_cmd.handle_set(["foo", "bar", "px", "1000"])
+@pytest.mark.asyncio
+async def test_original_command_set_with_px():
+    cmd = await set_cmd.handle_set(["foo", "bar", "px", "1000"])
     assert (
         cmd.original_command
         == b"*5\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$2\r\npx\r\n$4\r\n1000\r\n"

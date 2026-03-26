@@ -7,7 +7,7 @@ from app.command.info import get_info
 logger = logging.getLogger(__name__)
 
 
-def handle_replconf(args: List[str]) -> ParsedCommand:
+async def handle_replconf(args: List[str]) -> ParsedCommand:
     option, *values = args
     logger.info(f"REPLCONF {option} {' '.join(values)}")
 

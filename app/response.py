@@ -1,5 +1,4 @@
-import asyncio
-from typing import List, Optional
+from typing import List
 
 from app.command.const import Command, ParsedCommand
 from app.command import get, info, psync, replconf, set, wait
@@ -7,25 +6,16 @@ from app.parser import parser as resp_parser
 from app.replica import replication
 
 
-async def async_parse(msg: str) -> ParsedCommand:
-    return await asyncio.get_running_loop().run_in_executor(None, parse, msg)
-
-
-def parse(msg: str) -> ParsedCommand:
-    """
-    Parses a decoded message from Redis and returns a ParsedCommand.
-    """
+async def parse(msg: str) -> ParsedCommand:
+    """Parse a raw RESP string into a ParsedCommand."""
     tokens = resp_parser.parse_str(msg)
     if not isinstance(tokens, list):
         raise resp_parser.RESPParseError(f"Expected array, got {type(tokens).__name__}")
     args = [t.decode() if isinstance(t, bytes) else str(t) for t in tokens]
-    return parse_command(args)
+    return await parse_command(args)
 
 
-async def async_parse_command(msg: List[str]) -> ParsedCommand:
-    return await asyncio.get_running_loop().run_in_executor(None, parse_command, msg)
-
-def parse_command(msg: List[str]) -> ParsedCommand:
+async def parse_command(msg: List[str]) -> ParsedCommand:
     cmd, *rest = msg
     command = Command.get_command(cmd)
 
@@ -37,16 +27,16 @@ def parse_command(msg: List[str]) -> ParsedCommand:
                 command=Command.Echo, args=rest, response=" ".join(rest).encode()
             )
         case Command.Set:
-            return set.handle_set(rest)
+            return await set.handle_set(rest)
         case Command.Get:
-            return get.handle_get(rest)
+            return await get.handle_get(rest)
         case Command.Info:
-            return info.handle_info(rest)
+            return await info.handle_info(rest)
         case Command.Replconf:
-            return replconf.handle_replconf(rest)
+            return await replconf.handle_replconf(rest)
         case Command.Psync:
-            return psync.handle_psync(rest)
+            return await psync.handle_psync(rest)
         case Command.Wait:
-            return wait.handle_wait(rest)
+            return await wait.handle_wait(rest)
         case _:
             raise RuntimeError("Bad Command")

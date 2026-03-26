@@ -4,7 +4,7 @@ from app.cache.cache import set_key
 from app.command.const import Command, ParsedCommand
 
 
-def handle_set(args: List[str]) -> ParsedCommand:
+async def handle_set(args: List[str]) -> ParsedCommand:
     key, set_value, *options = args
     exp_milisec = _parse_expiry(options)
     set_key(key, set_value, exp=exp_milisec)

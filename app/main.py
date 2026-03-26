@@ -7,7 +7,7 @@ from typing import Tuple
 
 from app.command.const import Command, ParsedCommand
 from app.command.info import ReplicationRole, init_info, get_info
-from app.response import async_parse_command, parse_command
+from app.response import parse_command
 from app.replica import handshake, replication
 from app.parser import parser as resp_parser
 
@@ -25,7 +25,7 @@ async def handle_client(reader, writer):
         if args is None or args[0] == "quit":
             break
 
-        command = await async_parse_command(args)
+        command = await parse_command(args)
         logger.info(f"Got Message: {command}")
 
         writer.write(command.encode())
