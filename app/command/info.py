@@ -35,6 +35,9 @@ class ReplicationInfo:
     def is_slave(self):
         return self.role is ReplicationRole.SLAVE
 
+    def increment_offset(self, count: int) -> None:
+        self.master_repl_offset += count
+
 
 def handle_info(args: List[str]) -> ParsedCommand:
     """

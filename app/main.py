@@ -53,6 +53,7 @@ def _handle_replication(command: ParsedCommand, writer: asyncio.StreamWriter) ->
             replication.set_replica(writer)
 
         case Command.Set:
+            get_info().increment_offset(len(command.original_command))
             replication.send_replication(command)
 
 

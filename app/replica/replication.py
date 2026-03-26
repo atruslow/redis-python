@@ -4,6 +4,7 @@ from typing import List, Set
 
 from app import response
 from app.command.const import ParsedCommand
+from app.command.info import get_info
 from app.parser import parser as resp_parser
 
 import logging
@@ -53,6 +54,7 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
         logger.info(f"Received {args}")
 
         cmd = response.parse_command(args)
+        get_info().increment_offset(len(cmd.original_command))
 
         if cmd.replication_response:
             writer.write(cmd.encode())
