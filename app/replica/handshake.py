@@ -22,10 +22,19 @@ async def handshake(
     )
     await _send(reader, writer, [b"REPLCONF", b"capa", b"psync2"])
     await _send(reader, writer, [b"PSYNC", b"?", b"-1"])
+    await _consume_rdb(reader)
 
     logger.info("Completed handshake with master")
 
     return reader, writer
+
+
+async def _consume_rdb(reader: asyncio.StreamReader) -> None:
+    """Read and discard the RDB file sent by the master after FULLRESYNC."""
+    length_line = await reader.readline()  # $<len>\r\n
+    length = int(length_line[1:].strip())
+    await reader.readexactly(length)
+    logger.info(f"Consumed RDB file ({length} bytes)")
 
 
 async def _send(
