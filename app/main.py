@@ -7,7 +7,7 @@ from typing import Tuple
 
 from app.command.info import ReplicationRole, init_info
 from app.response import async_parse
-from app.replica import handshake
+from app.replica import handshake, replication
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +49,8 @@ async def run_server(args: argparse.Namespace):
 
     if not is_master:
         master_host, master_port = args.replicaof
-        await handshake.handshake(master_host, master_port, args.port)
+        conn = await handshake.handshake(master_host, master_port, args.port)
+        asyncio.create_task(replication.replication(*conn))
 
     async with server:
         logger.info(f"Starting Server on port {args.port}")

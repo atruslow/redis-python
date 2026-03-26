@@ -1,12 +1,13 @@
 import asyncio
 import logging
+from typing import Tuple
 
 from app.parser import parser as resp_parser
 
 logger = logging.getLogger(__name__)
 
 
-async def handshake(master_host: str, master_port: str, server_port: str) -> None:
+async def handshake(master_host: str, master_port: str, server_port: str) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """
     Completes a handshake with the master if we are a slave
     """
@@ -21,8 +22,8 @@ async def handshake(master_host: str, master_port: str, server_port: str) -> Non
     await _send(reader, writer, [b"PSYNC", b"?", b"-1"])
 
     logger.info("Completed handshake with master")
-    writer.close()
-    await writer.wait_closed()
+
+    return reader, writer
 
 
 async def _send(

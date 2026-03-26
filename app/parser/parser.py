@@ -56,6 +56,15 @@ class RESPParseError(ValueError):
 # Parser
 # ---------------------------------------------------------------------------
 
+def parse_list(data: str) -> List[str]:
+
+    value = parse_str(data)
+
+    if not isinstance(value, List) or not all(isinstance(i, str) for i in value):
+        raise ValueError("Incorrect Data")
+    
+    return [str(i) for i in value]
+
 
 def parse_str(data: str) -> RESPValue:
     """Convenience wrapper around ``parse`` that accepts a string instead of bytes."""

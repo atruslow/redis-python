@@ -1,42 +1,42 @@
-Full Resynchronization
+In this stage, you'll add support for propagating write commands to a single replica as a master.
+Command Propagation
 
-When a replica connects to a master for the first time, it sends a PSYNC ? -1 command. This is the replica's way of telling the master that it doesn't have any data yet and needs to be fully resynchronized.
+After the replication handshake is complete and the master has sent the RDB file to the replica, the master starts propagating "write" commands to the replica.
 
-The master responds in two steps:
+Write commands are commands that modify the master's dataset, such as SET and DEL. Commands like PING, ECHO, etc., are not considered "write" commands, so they aren't propagated.
+The Propagation Process
 
-    It acknowledges with a FULLRESYNC response (Handled in previous stages)
-    It sends a snapshot of its current state as an RDB file.
+Command propagation happens over the replication connection. This is the same connection that was used for the handshake.
 
-The replica is expected to load the file into memory and replace its current state with the master's data.
+The propagated commands are sent as RESP arrays. For example, if the master receives SET foo bar as a command from a client, it'll send *3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n to all connected replicas over their respective replication connections.
 
-For this challenge, you don’t need to build an RDB file yourself. Instead, you can hardcode an empty RDB file, since we’ll assume the master’s database is always empty.
+Replicas process commands received over the connection just like they would process commands received from a client, but with one difference: they don't send responses back to the master. They just process the command silently and update their state.
 
-You can find the hex and base64 representation of an empty RDB file here. You need to decode these into binary contents before sending them to the replica.
+Similarly, the master doesn't wait for a response from the replica when propagating commands. It just sends the commands as they come in.
 
-The file is sent using the following format:
-
-$<length_of_file>\r\n<binary_contents_of_file>
-
-This is similar to how bulk strings are encoded, but without the trailing \r\n.
+There is one exception to this "no response" rule: the REPLCONF GETACK command. We'll learn about this command in later stages.
 Tests
 
 The tester will execute your program like this:
 
 ./your_program.sh --port <PORT>
 
-It will then connect to your TCP server as a replica and execute the following commands:
+It will then connect to your TCP server as a replica and complete the full handshake sequence covered in previous stages.
 
-    PING - expecting +PONG\r\n
-    REPLCONF listening-port <PORT> - expecting +OK\r\n
-    REPLCONF capa eof capa psync2 - expecting +OK\r\n
-    PSYNC ? -1 - expecting +FULLRESYNC <REPL_ID> 0\r\n
+The tester will then wait for your server to send an RDB file.
 
-After the last response, the tester will expect to receive an empty RDB file from your server.
+Once the RDB file is received, the tester will send a series of write commands to your program (as a separate Redis client).
 
-The tester will accept any valid RDB file that is empty.
+$ redis-cli SET foo 1
+$ redis-cli SET bar 2
+$ redis-cli SET baz 3
+
+It will then assert that these commands were propagated to the replica in the correct order. The tester will expect to receive these commands:
+
+    Encoded as RESP arrays.
+    Sent on the same connection used for the handshake (replication connection).
+
 Notes
 
-    The RDB file should be sent like this: $<length>\r\n<contents>
-        <length> is the length of the file in bytes
-        <contents> is the binary contents of the file
-        Note that this is NOT a RESP bulk string and doesn't contain a \r\n at the end.
+    Although replicas provide a listening-port during the handshake, it’s used only for monitoring/logging purposes, not for propagation. Redis propagates commands over the same TCP connection that the replica initiated during the handshake.
+    A true implementation would buffer the commands so that they can be sent to the replica after it loads the RDB file. For the purposes of this challenge, you can assume that the replica is ready to receive commands immediately after receiving the RDB file.

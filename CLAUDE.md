@@ -76,3 +76,7 @@ The server is single-process, async (asyncio). Each client connection is handled
 - Don't use `assert` outside of tests
 - Run `ruff format` before committing
 - Run `mypy .` to check types — all files must pass cleanly
+
+## Codecrafter Instructions
+
+See `instructions.md` for the current codecrafters challenge.
