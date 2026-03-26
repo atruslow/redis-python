@@ -30,6 +30,7 @@ class ParsedCommand:
     args: List[str]
     response: Optional[RESPValue]
     raw_extra: Optional[bytes] = None
+    replication_response: bool = False
 
     def encode(self) -> bytes:
         return resp_parser.encode(self.response)

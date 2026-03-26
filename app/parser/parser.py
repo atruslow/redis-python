@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional, Sequence, Union
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ class RESPType(Enum):
 
 
 # A RESP value is one of these Python types (None represents a null bulk/array).
-RESPValue = Union[str, "RESPError", int, bytes, List["RESPValue"], None]
+RESPValue = Union[str, "RESPError", int, bytes, Sequence["RESPValue"], None]
 
 
 @dataclass

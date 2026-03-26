@@ -52,4 +52,8 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
 
         logger.info(f"Received {args}")
 
-        response.parse_command(args)
+        cmd = response.parse_command(args)
+
+        if cmd.replication_response:
+            writer.write(cmd.encode())
+            await writer.drain()

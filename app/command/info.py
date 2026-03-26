@@ -30,7 +30,7 @@ class ReplicationInfo:
                 if k in ["role", "master_replid", "master_repl_offset"]
             ]
         )
-    
+
     @property
     def is_slave(self):
         return self.role is ReplicationRole.SLAVE
