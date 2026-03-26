@@ -1,9 +1,10 @@
 import asyncio
-from typing import List
+from typing import List, Optional
 
 from app.command.const import Command, ParsedCommand
 from app.command import get, info, psync, replconf, set
 from app.parser import parser as resp_parser
+from app.replica import replication
 
 
 async def async_parse(msg: str) -> ParsedCommand:

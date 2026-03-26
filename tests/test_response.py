@@ -24,7 +24,8 @@ def test_response_parses_echo_multiple_words():
     )
 
 
-def test_response_parses_set():
+@pytest.mark.asyncio
+async def test_response_parses_set():
     assert response.parse(
         "*3\r\n$3\r\nset\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
     ) == ParsedCommand(command=Command.Set, args=["foo", "bar"], response="OK")
@@ -36,7 +37,8 @@ def test_response_parses_get_missing_key():
     assert result.response is None
 
 
-def test_response_parses_get_existing_key():
+@pytest.mark.asyncio
+async def test_response_parses_get_existing_key():
     response.parse("*3\r\n$3\r\nset\r\n$3\r\nbaz\r\n$3\r\nqux\r\n")
     result = response.parse("*2\r\n$3\r\nget\r\n$3\r\nbaz\r\n")
     assert result.command == Command.Get

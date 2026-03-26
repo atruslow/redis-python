@@ -5,6 +5,7 @@ import asyncio
 import re
 from typing import Tuple
 
+from app.command.const import Command, ParsedCommand
 from app.command.info import ReplicationRole, init_info
 from app.response import async_parse
 from app.replica import handshake, replication
@@ -31,6 +32,8 @@ async def handle_client(reader, writer):
         if command.raw_extra is not None:
             writer.write(command.raw_extra)
 
+        _handle_replication(command, writer)
+
         try:
             await writer.drain()
         except ConnectionResetError:
@@ -38,6 +41,16 @@ async def handle_client(reader, writer):
             break
 
     writer.close()
+
+
+def _handle_replication(command: ParsedCommand, writer: asyncio.StreamWriter) -> None:
+
+    match command.command:
+        case Command.Psync:
+            replication.set_replica(writer)
+
+        case Command.Set:
+            replication.send_replication(command)
 
 
 async def run_server(args: argparse.Namespace):
@@ -51,7 +64,9 @@ async def run_server(args: argparse.Namespace):
     if not is_master:
         master_host, master_port = args.replicaof
         conn = await handshake.handshake(master_host, master_port, args.port)
-        background_tasks.add(asyncio.create_task(replication.replication(*conn)))
+        background_tasks.add(
+            asyncio.create_task(replication.receive_replication(*conn))
+        )
 
     async with server:
         logger.info(f"Starting Server on port {args.port}")

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import List, Optional
 
+from app.parser import parser
 from app.parser.parser import RESPValue
 from app.parser import parser as resp_parser
 
@@ -32,3 +33,9 @@ class ParsedCommand:
 
     def encode(self) -> bytes:
         return resp_parser.encode(self.response)
+    
+    @property
+    def original_command(self) -> bytes:
+
+        return parser.encode([self.command, *self.args])
+

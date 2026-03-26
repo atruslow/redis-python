@@ -1,3 +1,4 @@
+from asyncio import StreamWriter
 import base64
 import logging
 from pathlib import Path
@@ -5,6 +6,7 @@ from typing import List
 
 from app.command.const import Command, ParsedCommand
 from app.command.info import get_info
+from app.replica import replication
 
 logger = logging.getLogger(__name__)
 
