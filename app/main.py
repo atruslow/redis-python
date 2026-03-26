@@ -42,6 +42,7 @@ async def handle_client(reader, writer):
 
 async def run_server(args: argparse.Namespace):
     server = await asyncio.start_server(handle_client, "localhost", args.port)
+    background_tasks = set()
 
     is_master = args.replicaof is None
 
@@ -50,7 +51,7 @@ async def run_server(args: argparse.Namespace):
     if not is_master:
         master_host, master_port = args.replicaof
         conn = await handshake.handshake(master_host, master_port, args.port)
-        asyncio.create_task(replication.replication(*conn))
+        background_tasks.add(asyncio.create_task(replication.replication(*conn)))
 
     async with server:
         logger.info(f"Starting Server on port {args.port}")
