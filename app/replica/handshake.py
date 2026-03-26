@@ -44,5 +44,5 @@ async def _send(
 ) -> None:
     writer.write(resp_parser.encode(args))
     await writer.drain()
-    resp = await reader.read(1024)
+    resp = await reader.readline()
     logger.info(f"Master response: {resp!r}")
