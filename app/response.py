@@ -22,6 +22,9 @@ def parse(msg: str) -> ParsedCommand:
     return parse_command(args)
 
 
+async def async_parse_command(msg: List[str]) -> ParsedCommand:
+    return await asyncio.get_running_loop().run_in_executor(None, parse_command, msg)
+
 def parse_command(msg: List[str]) -> ParsedCommand:
     cmd, *rest = msg
     command = Command.get_command(cmd)
