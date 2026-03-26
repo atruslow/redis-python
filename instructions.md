@@ -1,24 +1,35 @@
-In this stage, you'll extend your REPLCONF GETACK implementation to respond with the number of bytes of commands processed by the replica.
-ACKs (Recap)
+In this stage, you’ll implement support for the WAIT command on the master.
+The WAIT command
 
-As a recap, a master uses ACKs to verify that its replicas are in sync with it and haven't fallen behind. Each ACK contains an offset — the number of bytes of commands processed by the replica.
-Offset tracking
+The WAIT command is used to check how many replicas have acknowledged all previous write commands. This allows a client to measure the durability of a write command before considering it successful.
 
-A replica keeps its offset updated by tracking the total byte size of every command received from its master. This includes both write commands (like SET, DEL) and non-write commands (like PING, REPLCONF GETACK *).
+The command format is:
 
-After processing the received command (e.g., ["SET", "foo", "bar]), it adds the full RESP array byte length to its running offset.
+WAIT <numreplicas> <timeout>
 
-An important rule for this process is that the offset should only include commands processed before the current REPLCONF GETACK * request.
+Here's what each argument means:
+
+    <numreplicas>: The minimum number of replicas that must acknowledge all previous write commands.
+    <timeout>: The maximum time (in milliseconds) the client is willing to wait.
 
 For example:
 
-    A replica connects, completes the handshake, and the master sends REPLCONF GETACK *.
-        The replica responds with REPLCONF ACK 0 since no commands had been processed before this request.
-    Next, the master sends another REPLCONF GETACK *.
-        The replica responds with REPLCONF ACK 37, because the previous REPLCONF command consumed 37 bytes.
-    The master then sends a PING command.
-        The replica silently processes it, increments its offset by 14, and sends no response.
-    The next REPLCONF GETACK * arrives.
-        The replica responds with REPLCONF ACK 88 — that’s 37 (for the first REPLCONF), +37 (for the second REPLCONF), +14 (for the PING).
+$ redis-cli WAIT 3 5000
+(integer) 2
 
-Notice that the current GETACK request itself is not included in the offset value.
+Here, the client is asking the master to wait for 3 replicas (with a maximum timeout of 5000 ms). After the timeout passes, the master has only 2 replicas connected, so it immediately replies with 2 as a RESP integer.
+
+For now, we’ll handle the simplest case: when the client needs 0 replicas and the master also has no replicas connected. In this case, WAIT should immediately return 0.
+
+We'll get to tracking the number of replicas and responding accordingly in later stages.
+Tests
+
+The tester will execute your program like this:
+
+./your_program.sh
+
+It will then connect to your master and send:
+
+$ redis-cli WAIT 0 60000
+
+The tester will expect to receive 0 immediately (as a RESP integer), since no replicas are connected.

@@ -44,19 +44,20 @@ redis-cli -p 6379 info replication
 The server is single-process, async (asyncio). Each client connection is handled by `handle_client` in `app/main.py`, which reads raw RESP frames, passes them through the parsing pipeline, and writes back the encoded response.
 
 **Request flow:**
-1. `app/main.py:handle_client` — reads raw bytes from socket
-2. `app/response.py:async_parse` → `parse` — uses `app/parser/parser.py` to parse the RESP frame, decodes bulk-string tokens to `str`
-3. `app/response.py:parse_command` — dispatches to per-command handlers based on `Command` enum
-4. Command handler returns a `ParsedCommand(command, args, response)` dataclass
-5. `ParsedCommand.encode()` calls `resp_parser.encode()` and writes `bytes` back to the socket
+1. `app/main.py:handle_client` — calls `parse_stream(reader)` to read one complete RESP array frame
+2. `app/response.py:parse_command` — dispatches to per-command handlers based on `Command` enum
+3. Command handler returns a `ParsedCommand(command, args, response)` dataclass
+4. `ParsedCommand.encode()` calls `resp_parser.encode()` and writes `bytes` back to the socket
+5. `app/main.py:_handle_replication` — after each command, registers replica writers (PSYNC) or propagates to replicas (SET)
 
 **Key modules:**
-- `app/command/const.py` — `Command` (`StrEnum` with `auto()`, value = lowercase name), `ParsedCommand` dataclass; `encode()` delegates to `resp_parser`
+- `app/command/const.py` — `Command` (`StrEnum` with `auto()`, value = lowercase name), `ParsedCommand` dataclass; `encode()` delegates to `resp_parser`; `original_command` re-encodes as RESP array of bulk strings; `replication_response` flag controls whether replica responds back to master
 - `app/command/set.py` / `get.py` — SET (with EX/PX expiry parsed as option pairs) and GET handlers
-- `app/command/info.py` — INFO/PSYNC support; `init_info(**kwargs)` called once at startup, `get_info()` used by handlers; holds `ReplicationInfo` dataclass
+- `app/command/info.py` — INFO/PSYNC support; `init_info(**kwargs)` called once at startup, `get_info()` used by handlers; holds `ReplicationInfo` dataclass with `master_repl_offset` and `is_slave` property
 - `app/cache/cache.py` — in-memory `CACHE` dict of `CacheItem` objects with optional UTC expiry; expiry is checked lazily on GET
-- `app/parser/parser.py` — full RESP2 parser and encoder; `parse(bytes)` returns `(RESPValue, bytes_consumed)`, `encode(RESPValue)` returns `bytes`
-- `app/replica/handshake.py` — replica handshake sequence (PING → REPLCONF listening-port → REPLCONF capa → PSYNC)
+- `app/parser/parser.py` — full RESP2 parser and encoder; `parse(bytes)` returns `(RESPValue, bytes_consumed)`, `encode(RESPValue)` returns `bytes`; `parse_stream(reader)` reads one complete RESP array from an asyncio StreamReader
+- `app/replica/handshake.py` — replica handshake sequence (PING → REPLCONF listening-port → REPLCONF capa → PSYNC → consume RDB)
+- `app/replica/replication.py` — master side: `REPLICA_STREAMS` set, `send_replication` propagates write commands; replica side: `receive_replication` reads commands from master, increments offset, responds only to GETACK
 
 **Adding a new command:**
 1. Add a variant to `Command` (`StrEnum`) in `const.py` — the value is automatically the lowercase name

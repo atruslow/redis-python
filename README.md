@@ -12,7 +12,15 @@ A toy Redis server built as part of the [CodeCrafters](https://codecrafters.io) 
 | `GET <key>` | Returns value or null bulk string |
 | `INFO replication` | Returns replication metadata |
 | `REPLCONF listening-port <port>` / `capa psync2` | Replica handshake |
-| `PSYNC <replication_id> <offset>` | Returns `+FULLRESYNC <replid> 0` |
+| `REPLCONF GETACK *` | Replica responds with current replication offset |
+| `PSYNC <replication_id> <offset>` | Returns `+FULLRESYNC <replid> 0` + RDB file |
+
+## Replication
+
+- Master propagates write commands (SET) to all connected replicas over the replication connection
+- Replicas complete the full handshake (PING → REPLCONF → PSYNC), consume the RDB file, then enter a command loop
+- Replicas process commands silently — only respond to `REPLCONF GETACK`
+- Replication offset tracked on both master and replica
 
 ## Running
 
@@ -30,4 +38,5 @@ python3 -m app.main -p 6380 --replicaof "localhost 6379"
 
 ```sh
 python3 -m pytest
+python3 -m pytest --cov  # with coverage
 ```

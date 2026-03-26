@@ -14,6 +14,10 @@ logger = logger = logging.getLogger(__name__)
 REPLICA_STREAMS: Set[StreamWriter] = set()
 
 
+def num_replicas() -> int:
+    return len(REPLICA_STREAMS)
+
+
 def set_replica(writer: StreamWriter) -> None:
     """
     Appends to the list of replicas

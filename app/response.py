@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Optional
 
 from app.command.const import Command, ParsedCommand
-from app.command import get, info, psync, replconf, set
+from app.command import get, info, psync, replconf, set, wait
 from app.parser import parser as resp_parser
 from app.replica import replication
 
@@ -43,5 +43,7 @@ def parse_command(msg: List[str]) -> ParsedCommand:
             return replconf.handle_replconf(rest)
         case Command.Psync:
             return psync.handle_psync(rest)
+        case Command.Wait:
+            return wait.handle_wait(rest)
         case _:
             raise RuntimeError("Bad Command")

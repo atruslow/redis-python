@@ -15,6 +15,7 @@ class Command(StrEnum):
     Info = auto()
     Replconf = auto()
     Psync = auto()
+    Wait = auto()
 
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
