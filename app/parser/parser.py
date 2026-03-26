@@ -11,6 +11,7 @@ Supports the full RESP2 type set:
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Union
@@ -117,6 +118,26 @@ def parse_all(data: bytes) -> List[RESPValue]:
         values.append(value)
         offset += consumed
     return values
+
+
+async def parse_stream(reader: asyncio.StreamReader) -> Optional[List[str]]:
+    """
+    Read one complete RESP array command from *reader*.
+    Returns a list of string args, or None on EOF.
+    """
+    header = await reader.readline()
+    if not header:
+        return None
+    count = int(header[1:].strip())
+
+    args = []
+    for _ in range(count):
+        length_line = await reader.readline()
+        length = int(length_line[1:].strip())
+        payload = await reader.readexactly(length + 2)  # +2 for \r\n
+        args.append(payload[:-2].decode())
+
+    return args
 
 
 # -- internal helpers -------------------------------------------------------

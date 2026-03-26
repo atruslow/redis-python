@@ -6,9 +6,10 @@ import re
 from typing import Tuple
 
 from app.command.const import Command, ParsedCommand
-from app.command.info import ReplicationRole, init_info
-from app.response import async_parse
+from app.command.info import ReplicationRole, init_info, get_info
+from app.response import parse_command
 from app.replica import handshake, replication
+from app.parser import parser as resp_parser
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,14 +19,13 @@ HOST_PORT_RE = re.compile(r"^(?P<host>\S+)\s+(?P<port>\d+)$")
 
 
 async def handle_client(reader, writer):
-    request = None
-    while request != "quit":
-        request = (await reader.read(1024)).decode("utf8")
+    while True:
+        args = await resp_parser.parse_stream(reader)
 
-        if not request:
+        if args is None or args[0] == "quit":
             break
 
-        command = await async_parse(request)
+        command = parse_command(args)
         logger.info(f"Got Message: {command}")
 
         writer.write(command.encode())
@@ -44,6 +44,9 @@ async def handle_client(reader, writer):
 
 
 def _handle_replication(command: ParsedCommand, writer: asyncio.StreamWriter) -> None:
+
+    if get_info().is_slave:
+        return
 
     match command.command:
         case Command.Psync:

@@ -33,9 +33,10 @@ class ParsedCommand:
 
     def encode(self) -> bytes:
         return resp_parser.encode(self.response)
-    
+
     @property
     def original_command(self) -> bytes:
 
-        return parser.encode([self.command.upper().encode(), *[a.encode() for a in self.args]])
-
+        return parser.encode(
+            [self.command.upper().encode(), *[a.encode() for a in self.args]]
+        )
