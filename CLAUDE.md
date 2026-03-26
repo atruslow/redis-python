@@ -16,7 +16,7 @@ python3 -m app.main -p 6380 --replicaof "localhost 6379"  # run as replica
 
 **Run tests:**
 ```sh
-python3 -m pytest
+python3 -m pytest --cov
 python3 -m pytest tests/test_response.py  # single test file
 python3 -m pytest -k test_response_parses  # single test by name
 ```
