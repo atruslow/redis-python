@@ -32,7 +32,7 @@ async def handle_client(reader, writer):
         if command.raw_extra is not None:
             writer.write(command.raw_extra)
 
-        _handle_replication(command, writer)
+        _handle_replication(command, writer, reader)
 
         try:
             await writer.drain()
@@ -43,14 +43,16 @@ async def handle_client(reader, writer):
     writer.close()
 
 
-def _handle_replication(command: ParsedCommand, writer: asyncio.StreamWriter) -> None:
+def _handle_replication(
+    command: ParsedCommand, writer: asyncio.StreamWriter, reader: asyncio.StreamReader
+) -> None:
 
     if get_info().is_slave:
         return
 
     match command.command:
         case Command.Psync:
-            replication.set_replica(writer)
+            replication.set_replica(writer, reader)
 
         case Command.Set:
             get_info().increment_offset(len(command.original_command))

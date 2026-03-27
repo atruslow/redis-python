@@ -1,35 +1,34 @@
-In this stage, you’ll implement support for the WAIT command on the master.
-The WAIT command
+In this stage, you’ll extend your WAIT implementation to handle the case where replicas are connected and have received write commands.
+WAIT with propagated commands
 
-The WAIT command is used to check how many replicas have acknowledged all previous write commands. This allows a client to measure the durability of a write command before considering it successful.
+In previous stages, we handled the cases where:
 
-The command format is:
+    No replicas were connected, and the master could safely return 0.
+    Replicas were connected, but hadn't received any write commands.
 
-WAIT <numreplicas> <timeout>
+Now, we’ll handle the case where write commands have been sent to replicas. Since replication offsets are no longer 0, the master needs to check which replicas have successfully processed the latest write command before replying.
 
-Here's what each argument means:
+To do this, the master must send REPLCONF GETACK * to replicas if there are pending write commands since the last WAIT. Each replica will reply with its current offset (REPLCONF ACK <offset>).
 
-    <numreplicas>: The minimum number of replicas that must acknowledge all previous write commands.
-    <timeout>: The maximum time (in milliseconds) the client is willing to wait.
+The WAIT command should complete when either:
 
-For example:
+    The required number of replicas has acknowledged all previous write commands, or
+    The timeout expires.
 
-$ redis-cli WAIT 3 5000
-(integer) 2
-
-Here, the client is asking the master to wait for 3 replicas (with a maximum timeout of 5000 ms). After the timeout passes, the master has only 2 replicas connected, so it immediately replies with 2 as a RESP integer.
-
-For now, we’ll handle the simplest case: when the client needs 0 replicas and the master also has no replicas connected. In this case, WAIT should immediately return 0.
-
-We'll get to tracking the number of replicas and responding accordingly in later stages.
+Either way, the master should return the number of replicas that acknowledged all previous write commands as a RESP integer.
 Tests
 
-The tester will execute your program like this:
+The tester will execute your program as a master like this:
 
 ./your_program.sh
 
-It will then connect to your master and send:
+It will then start multiple replicas that connect to your server. Each will complete the handshake and expect to receive an empty RDB file.
 
-$ redis-cli WAIT 0 60000
+Next, the tester will connect to your master as a client and send multiple write commands interleaved with WAIT commands:
 
-The tester will expect to receive 0 immediately (as a RESP integer), since no replicas are connected.
+$ redis-cli SET foo 123
+$ redis-cli WAIT 1 500    # (must wait until either 1 replica has processed previous commands or 500ms have passed)
+
+$ redis-cli SET bar 456
+$ redis-cli WAIT 2 500    # (must wait until either 2 replicas have processed previous commands or 500ms have passed)
+

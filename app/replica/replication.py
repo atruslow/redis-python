@@ -1,6 +1,6 @@
 from asyncio import StreamReader, StreamWriter
 import asyncio
-from typing import List, Set
+from typing import List, Set, Tuple
 
 from app import response
 from app.command.const import ParsedCommand
@@ -11,18 +11,38 @@ import logging
 
 logger = logger = logging.getLogger(__name__)
 
-REPLICA_STREAMS: Set[StreamWriter] = set()
+REPLICA_STREAMS: Set[Tuple[StreamWriter, StreamReader]] = set()
 
 
-def num_replicas() -> int:
-    return len(REPLICA_STREAMS)
+async def num_replicas(requested: int, timeout: int) -> int:
+
+    tasks = [
+        asyncio.create_task(_poll_replicas(writer, reader))
+        for (writer, reader) in REPLICA_STREAMS
+    ]
+    completed = 0
+
+    try:
+        async with asyncio.timeout(timeout / 1000):
+            for coro in asyncio.as_completed(tasks):
+                await coro
+                completed += 1
+                if completed >= requested:
+                    break
+    except TimeoutError:
+        pass
+    finally:
+        for t in tasks:
+            t.cancel()
+
+    return completed
 
 
-def set_replica(writer: StreamWriter) -> None:
+def set_replica(writer: StreamWriter, reader: StreamReader) -> None:
     """
     Appends to the list of replicas
     """
-    REPLICA_STREAMS.add(writer)
+    REPLICA_STREAMS.add((writer, reader))
 
 
 def send_replication(command: ParsedCommand) -> None:
@@ -35,7 +55,7 @@ def send_replication(command: ParsedCommand) -> None:
 
 async def _replicate(command: ParsedCommand) -> None:
 
-    for i, replica_writer in enumerate(REPLICA_STREAMS):
+    for i, (replica_writer, _) in enumerate(REPLICA_STREAMS):
         logger.info(f"Replicating to slave {i}")
 
         replica_writer.write(command.original_command)
@@ -63,3 +83,30 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
         if cmd.replication_response:
             writer.write(cmd.encode())
             await writer.drain()
+
+
+async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
+
+    while True:
+        get_ack_cmd = _encode(["REPLCONF", "GETACK", "*"])
+        writer.write(get_ack_cmd)
+        await writer.drain()
+
+        value = await resp_parser.parse_stream(reader)
+
+        if not value:
+            continue
+
+        _, _, offset = value
+
+        logger.info(f"Received {offset}")
+
+        if get_info().master_repl_offset == int(offset):
+            return
+
+        await asyncio.sleep(0.05)
+
+
+def _encode(cmd: List[str]) -> bytes:
+
+    return resp_parser.encode([a.encode() for a in cmd])
