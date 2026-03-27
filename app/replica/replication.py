@@ -16,6 +16,12 @@ REPLICA_STREAMS: Set[Tuple[StreamWriter, StreamReader]] = set()
 
 async def num_replicas(requested: int, timeout: int) -> int:
 
+    if not REPLICA_STREAMS:
+        return 0
+
+    if get_info().master_repl_offset == 0:
+        return len(REPLICA_STREAMS)
+
     tasks = [
         asyncio.create_task(_poll_replicas(writer, reader))
         for (writer, reader) in REPLICA_STREAMS
@@ -27,8 +33,6 @@ async def num_replicas(requested: int, timeout: int) -> int:
             for coro in asyncio.as_completed(tasks):
                 await coro
                 completed += 1
-                if completed >= requested:
-                    break
     except TimeoutError:
         pass
     finally:
