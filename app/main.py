@@ -41,7 +41,7 @@ async def handle_client(reader, writer):
             break
 
         if became_replica:
-            break
+            return
 
     writer.close()
 
