@@ -101,7 +101,7 @@ async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
 
         logger.info(f"Received {offset}")
 
-        if get_info().master_repl_offset == int(offset):
+        if int(offset) >= get_info().master_repl_offset:
             return
 
         await asyncio.sleep(0.05)
