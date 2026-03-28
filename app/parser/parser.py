@@ -245,6 +245,13 @@ def encode_bulk_string(value: str) -> bytes:
     """Convenience wrapper: encode a str as a RESP Bulk String (not Simple String)."""
     return _encode_bulk_string(value.encode())
 
+def encode_list(msg: list[str]) -> bytes:
+    """
+    Helper function to encode a list of string
+    """
+
+    return encode([a.encode() for a in msg])
+
 
 # -- internal helpers -------------------------------------------------------
 
