@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
 
-from app.parser import parser
 from app.parser import parser as resp_parser
 from app.parser.parser import RESPValue
 
@@ -44,6 +43,4 @@ class ParsedCommand:
     @property
     def original_command(self) -> bytes:
         """Re-encode the command and args as a RESP array of bulk strings."""
-        return parser.encode(
-            [self.command.upper().encode(), *[a.encode() for a in self.args]]
-        )
+        return resp_parser.encode_list([self.command.upper(), *self.args])
