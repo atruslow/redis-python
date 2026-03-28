@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 async def handshake(
     master_host: str, master_port: str, server_port: str
-) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+) -> tuple[asyncio.StreamWriter, asyncio.StreamReader]:
     """
     Completes a handshake with the master if we are a slave
     """
@@ -25,7 +25,7 @@ async def handshake(
 
     logger.info("Completed handshake with master")
 
-    return reader, writer
+    return writer, reader
 
 
 async def _consume_rdb(reader: asyncio.StreamReader) -> None:

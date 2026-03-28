@@ -14,6 +14,7 @@ A toy Redis server built as part of the [CodeCrafters](https://codecrafters.io) 
 | `REPLCONF listening-port <port>` / `capa psync2` | Replica handshake |
 | `REPLCONF GETACK *` | Replica responds with current replication offset |
 | `PSYNC <replication_id> <offset>` | Returns `+FULLRESYNC <replid> 0` + RDB file |
+| `WAIT <numreplicas> <timeout>` | Blocks until N replicas acknowledge all previous writes, or timeout (ms) expires |
 
 ## Replication
 
@@ -21,6 +22,7 @@ A toy Redis server built as part of the [CodeCrafters](https://codecrafters.io) 
 - Replicas complete the full handshake (PING → REPLCONF → PSYNC), consume the RDB file, then enter a command loop
 - Replicas process commands silently — only respond to `REPLCONF GETACK`
 - Replication offset tracked on both master and replica
+- `WAIT` returns the total number of replicas that have acknowledged all previous writes
 
 ## Running
 

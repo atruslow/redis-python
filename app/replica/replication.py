@@ -48,6 +48,26 @@ class Replica:
         return int(offset)
 
 
+@dataclass
+class Master:
+    """
+    Class containing data about the master
+    """
+
+    writer: StreamWriter
+    reader: StreamReader
+
+    async def read(self) -> list[str] | None:
+        """Read Data from the master"""
+        return await resp_parser.parse_stream(self.reader)
+
+    async def write(self, data: bytes) -> None:
+        """Writes data to the master"""
+
+        self.writer.write(data)
+        await self.writer.drain()
+
+
 async def num_replicas(requested: int, timeout: int) -> int:
     """
     Returns the amount of replicas that are up to date, up to the timeout or the requested amount
@@ -103,9 +123,7 @@ async def _replicate(command: ParsedCommand) -> None:
         await replica.send(command.original_command)
 
 
-async def receive_replication(
-    master_reader: StreamReader, master_writer: StreamWriter
-) -> None:
+async def receive_replication(master: Master) -> None:
     """
     Replicates data from a master without responding
     """
@@ -113,7 +131,7 @@ async def receive_replication(
     logger.info("Awaiting data from master")
 
     while True:
-        args = await resp_parser.parse_stream(master_reader)
+        args = await master.read()
 
         if args is None:
             break
@@ -124,8 +142,7 @@ async def receive_replication(
         get_info().increment_offset(len(cmd.original_command))
 
         if cmd.replication_response:
-            master_writer.write(cmd.encode())
-            await master_writer.drain()
+            await master.write(cmd.encode())
 
 
 async def _poll_replica(replica: Replica) -> None:

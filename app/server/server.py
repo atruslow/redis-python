@@ -5,9 +5,9 @@ from asyncio import StreamReader, StreamWriter
 
 from app.command.const import Command, ParsedCommand
 from app.command.info import ReplicationRole, get_info, init_info
+from app.command.response import parse_command
 from app.parser import parser as resp_parser
 from app.replica import handshake, replication
-from app.command.response import parse_command
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,9 @@ async def run_server(args: argparse.Namespace):
         master_host, master_port = args.replicaof
         conn = await handshake.handshake(master_host, master_port, args.port)
         background_tasks.add(
-            asyncio.create_task(replication.receive_replication(*conn))
+            asyncio.create_task(
+                replication.receive_replication(replication.Master(*conn))
+            )
         )
 
     async with server:
