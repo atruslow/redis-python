@@ -7,7 +7,7 @@ from app.command.const import Command, ParsedCommand
 from app.command.info import ReplicationRole, get_info, init_info
 from app.parser import parser as resp_parser
 from app.replica import handshake, replication
-from app.response import parse_command
+from app.command.response import parse_command
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import pytest
 
-from app import response
+from app.command import response
 from app.command.const import Command, ParsedCommand
 from app.parser.parser import RESPParseError
 

@@ -3,7 +3,7 @@ import logging
 from asyncio import StreamReader, StreamWriter
 from dataclasses import dataclass
 
-from app import response
+from app.command import response
 from app.command.const import ParsedCommand
 from app.command.info import get_info
 from app.parser import parser as resp_parser
