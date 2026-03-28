@@ -10,7 +10,6 @@ from app.parser import parser as resp_parser
 from app.replica import handshake, replication
 from app.response import parse_command
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
