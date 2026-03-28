@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Union
 
+
 class RESPType(Enum):
     """RESP type prefix characters."""
 
@@ -127,7 +128,6 @@ async def parse_stream(reader: asyncio.StreamReader) -> list[str] | None:
     return args
 
 
-
 def _read_line(data: bytes) -> tuple[bytes, int]:
     idx = data.find(b"\r\n")
     if idx == -1:
@@ -224,10 +224,10 @@ def encode_bulk_string(value: str) -> bytes:
     """Convenience wrapper: encode a str as a RESP Bulk String (not Simple String)."""
     return _encode_bulk_string(value.encode())
 
+
 def encode_list(msg: list[str]) -> bytes:
     """Encode a list of strings as a RESP array of bulk strings."""
     return encode([a.encode() for a in msg])
-
 
 
 def _encode_simple_string(value: str) -> bytes:

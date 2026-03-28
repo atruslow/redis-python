@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from asyncio import StreamReader, StreamWriter
+from dataclasses import dataclass
 
 from app import response
 from app.command.const import ParsedCommand
@@ -9,7 +10,42 @@ from app.parser import parser as resp_parser
 
 logger = logger = logging.getLogger(__name__)
 
-REPLICA_STREAMS: set[tuple[StreamWriter, StreamReader]] = set()
+REPLICA_STREAMS: set["Replica"] = set()
+
+
+@dataclass
+class Replica:
+    """
+    Class containing data about the replicas
+    """
+
+    writer: StreamWriter
+    reader: StreamReader
+
+    async def send(self, thing: bytes) -> None:
+        """
+        Send data to the replicas
+        """
+
+        self.writer.write(thing)
+        await self.writer.drain()
+
+    async def poll_offset(self) -> int | None:
+        """
+        Tries to get the current offset from the replica
+        """
+
+        get_ack_cmd = resp_parser.encode_list(["REPLCONF", "GETACK", "*"])
+        await self.send(get_ack_cmd)
+
+        value = await resp_parser.parse_stream(self.reader)
+
+        if not value:
+            return None
+
+        _, _, offset = value
+
+        return int(offset)
 
 
 async def num_replicas(requested: int, timeout: int) -> int:
@@ -23,10 +59,7 @@ async def num_replicas(requested: int, timeout: int) -> int:
     if get_info().master_repl_offset == 0:
         return len(REPLICA_STREAMS)
 
-    tasks = [
-        asyncio.create_task(_poll_replicas(writer, reader))
-        for (writer, reader) in REPLICA_STREAMS
-    ]
+    tasks = [asyncio.create_task(_poll_replica(replica)) for replica in REPLICA_STREAMS]
     completed = 0
 
     try:
@@ -51,7 +84,7 @@ def set_replica(writer: StreamWriter, reader: StreamReader) -> None:
     """
     Appends to the list of replicas
     """
-    REPLICA_STREAMS.add((writer, reader))
+    REPLICA_STREAMS.add(Replica(writer, reader))
 
 
 def send_replication(command: ParsedCommand) -> None:
@@ -64,14 +97,15 @@ def send_replication(command: ParsedCommand) -> None:
 
 async def _replicate(command: ParsedCommand) -> None:
 
-    for i, (replica_writer, _) in enumerate(REPLICA_STREAMS):
+    for i, replica in enumerate(REPLICA_STREAMS):
         logger.info(f"Replicating to slave {i}")
 
-        replica_writer.write(command.original_command)
-        await replica_writer.drain()
+        await replica.send(command.original_command)
 
 
-async def receive_replication(reader: StreamReader, writer: StreamWriter) -> None:
+async def receive_replication(
+    master_reader: StreamReader, master_writer: StreamWriter
+) -> None:
     """
     Replicates data from a master without responding
     """
@@ -79,7 +113,7 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
     logger.info("Awaiting data from master")
 
     while True:
-        args = await resp_parser.parse_stream(reader)
+        args = await resp_parser.parse_stream(master_reader)
 
         if args is None:
             break
@@ -90,23 +124,17 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
         get_info().increment_offset(len(cmd.original_command))
 
         if cmd.replication_response:
-            writer.write(cmd.encode())
-            await writer.drain()
+            master_writer.write(cmd.encode())
+            await master_writer.drain()
 
 
-async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
+async def _poll_replica(replica: Replica) -> None:
 
     while True:
-        get_ack_cmd = resp_parser.encode_list(["REPLCONF", "GETACK", "*"])
-        writer.write(get_ack_cmd)
-        await writer.drain()
+        offset = await replica.poll_offset()
 
-        value = await resp_parser.parse_stream(reader)
-
-        if not value:
+        if offset is None:
             continue
-
-        _, _, offset = value
 
         logger.info(f"Received {offset}")
 
@@ -114,4 +142,3 @@ async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
             return
 
         await asyncio.sleep(0.05)
-

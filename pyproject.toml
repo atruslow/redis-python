@@ -20,3 +20,4 @@ select = [
     # isort
     "I",
 ]
+ignore = ["E501"]
