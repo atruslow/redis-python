@@ -85,9 +85,8 @@ The server is single-process, async (asyncio). Each client connection is handled
 - Run pytest before commiting, wih coverage
   - Don't commit with lower than 90% test coverage
 - Run `mypy .` to check types — all files must pass cleanly
-- docstrings
-  - Don't use weird block style comments, prefer python docstrings
-  - every public function and class should have a doctsring
+- Docstrings: don't use block comment separators (`# ---`), use Python docstrings; every public function and class should have a docstring
+- Tests: write flat top-level functions (`def test_foo`), not classes, unless there's a specific reason to group (e.g. shared fixtures via `setup_method`)
 
 ## Codecrafter Instructions
 
