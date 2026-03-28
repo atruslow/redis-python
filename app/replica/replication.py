@@ -13,7 +13,7 @@ logger = logger = logging.getLogger(__name__)
 REPLICA_STREAMS: set["Replica"] = set()
 
 
-@dataclass
+@dataclass(frozen=True)
 class Replica:
     """
     Class containing data about the replicas
