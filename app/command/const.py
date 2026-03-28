@@ -7,6 +7,8 @@ from app.parser.parser import RESPValue
 
 
 class Command(StrEnum):
+    """Supported Redis commands; values are auto-lowercased names."""
+
     Ping = auto()
     Echo = auto()
     Set = auto()
@@ -18,6 +20,7 @@ class Command(StrEnum):
 
     @classmethod
     def get_command(cls, cmd: str) -> "Command":
+        """Look up a Command by name (case-insensitive); raises RuntimeError if unknown."""
         try:
             return cls(cmd.lower())
         except ValueError as e:
@@ -26,6 +29,8 @@ class Command(StrEnum):
 
 @dataclass
 class ParsedCommand:
+    """Result of parsing a single Redis command, including its encoded response."""
+
     command: Command
     args: list[str]
     response: RESPValue | None
@@ -33,11 +38,12 @@ class ParsedCommand:
     replication_response: bool = False
 
     def encode(self) -> bytes:
+        """Encode the response as RESP bytes."""
         return resp_parser.encode(self.response)
 
     @property
     def original_command(self) -> bytes:
-
+        """Re-encode the command and args as a RESP array of bulk strings."""
         return parser.encode(
             [self.command.upper().encode(), *[a.encode() for a in self.args]]
         )

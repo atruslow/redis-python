@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 async def handle_replconf(args: list[str]) -> ParsedCommand:
+    """Handle a REPLCONF command; responds to GETACK on replicas, otherwise returns OK."""
     option, *values = args
     logger.info(f"REPLCONF {option} {' '.join(values)}")
 

@@ -3,6 +3,7 @@ from app.command.const import Command, ParsedCommand
 
 
 async def handle_set(args: list[str]) -> ParsedCommand:
+    """Handle a SET command, storing the key with an optional EX/PX expiry."""
     key, set_value, *options = args
     exp_milisec = _parse_expiry(options)
     set_key(key, set_value, exp=exp_milisec)

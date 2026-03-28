@@ -17,12 +17,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Union
 
-# ---------------------------------------------------------------------------
-# Types
-# ---------------------------------------------------------------------------
-
-
 class RESPType(Enum):
+    """RESP type prefix characters."""
+
     SIMPLE_STRING = "+"
     ERROR = "-"
     INTEGER = ":"
@@ -44,22 +41,12 @@ class RESPError:
         return self.message
 
 
-# ---------------------------------------------------------------------------
-# Errors
-# ---------------------------------------------------------------------------
-
-
 class RESPParseError(ValueError):
     """Raised when the input does not conform to the RESP protocol."""
 
 
-# ---------------------------------------------------------------------------
-# Parser
-# ---------------------------------------------------------------------------
-
-
 def parse_list(data: str) -> list[str]:
-
+    """Parse a RESP-encoded string and return its contents as a plain list of strings."""
     value = parse_str(data)
 
     if not isinstance(value, list) or not all(isinstance(i, str) for i in value):
@@ -140,11 +127,8 @@ async def parse_stream(reader: asyncio.StreamReader) -> list[str] | None:
     return args
 
 
-# -- internal helpers -------------------------------------------------------
-
 
 def _read_line(data: bytes) -> tuple[bytes, int]:
-    """Return ``(line_without_crlf, total_bytes_consumed)`` for the first line."""
     idx = data.find(b"\r\n")
     if idx == -1:
         raise RESPParseError("Missing CRLF terminator")
@@ -207,11 +191,6 @@ def _parse_array(data: bytes) -> tuple[list[RESPValue] | None, int]:
     return elements, offset
 
 
-# ---------------------------------------------------------------------------
-# Encoder
-# ---------------------------------------------------------------------------
-
-
 def encode(value: RESPValue) -> bytes:
     """
     Encode a Python value into its RESP wire representation.
@@ -246,14 +225,9 @@ def encode_bulk_string(value: str) -> bytes:
     return _encode_bulk_string(value.encode())
 
 def encode_list(msg: list[str]) -> bytes:
-    """
-    Helper function to encode a list of string
-    """
-
+    """Encode a list of strings as a RESP array of bulk strings."""
     return encode([a.encode() for a in msg])
 
-
-# -- internal helpers -------------------------------------------------------
 
 
 def _encode_simple_string(value: str) -> bytes:

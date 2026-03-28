@@ -13,6 +13,7 @@ async def parse(msg: str) -> ParsedCommand:
 
 
 async def parse_command(msg: list[str]) -> ParsedCommand:
+    """Dispatch a pre-tokenized command list to the appropriate handler."""
     cmd, *rest = msg
     command = Command.get_command(cmd)
 

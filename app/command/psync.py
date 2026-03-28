@@ -16,6 +16,7 @@ def _load_rdb() -> bytes:
 
 
 async def handle_psync(args: list[str]) -> ParsedCommand:
+    """Handle a PSYNC command; responds with FULLRESYNC and appends the empty RDB payload."""
     replication_id, offset = args
     logger.info(f"PSYNC replication_id={replication_id} offset={offset}")
 
