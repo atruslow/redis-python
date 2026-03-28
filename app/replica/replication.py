@@ -32,7 +32,7 @@ async def num_replicas(requested: int, timeout: int) -> int:
                 await coro
                 completed += 1
 
-                if requested >= completed:
+                if requested == completed:
                     break
 
     except TimeoutError:
