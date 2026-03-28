@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import logging
-import sys
 from asyncio import StreamReader, StreamWriter
 
 from app.command.const import Command, ParsedCommand
