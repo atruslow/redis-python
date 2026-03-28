@@ -29,7 +29,6 @@ async def handshake(
 
 
 async def _consume_rdb(reader: asyncio.StreamReader) -> None:
-    """Read and discard the RDB file sent by the master after FULLRESYNC."""
     length_line = await reader.readline()  # $<len>\r\n
     length = int(length_line[1:].strip())
     await reader.readexactly(length)

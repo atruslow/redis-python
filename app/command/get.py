@@ -7,7 +7,7 @@ from app.command.const import Command, ParsedCommand
 
 
 async def handle_get(args: list[str]) -> ParsedCommand:
-
+    """Handle a GET command; returns the cached value or null if missing/expired."""
     (key,) = args
     value = _get_key(key)
 

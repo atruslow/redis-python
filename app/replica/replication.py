@@ -13,6 +13,9 @@ REPLICA_STREAMS: set[tuple[StreamWriter, StreamReader]] = set()
 
 
 async def num_replicas(requested: int, timeout: int) -> int:
+    """
+    Returns the amount of replicas that are up to date, up to the timeout or the requested amount
+    """
 
     if not REPLICA_STREAMS:
         return 0
@@ -94,7 +97,7 @@ async def receive_replication(reader: StreamReader, writer: StreamWriter) -> Non
 async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
 
     while True:
-        get_ack_cmd = _encode(["REPLCONF", "GETACK", "*"])
+        get_ack_cmd = resp_parser.encode_list(["REPLCONF", "GETACK", "*"])
         writer.write(get_ack_cmd)
         await writer.drain()
 
@@ -112,7 +115,3 @@ async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
 
         await asyncio.sleep(0.05)
 
-
-def _encode(cmd: list[str]) -> bytes:
-
-    return resp_parser.encode([a.encode() for a in cmd])
