@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import List, Optional
 
 from app.parser import parser
-from app.parser.parser import RESPValue
 from app.parser import parser as resp_parser
+from app.parser.parser import RESPValue
 
 
 class Command(StrEnum):
@@ -21,16 +20,16 @@ class Command(StrEnum):
     def get_command(cls, cmd: str) -> "Command":
         try:
             return cls(cmd.lower())
-        except ValueError:
-            raise RuntimeError(f"Unknown command: {cmd!r}")
+        except ValueError as e:
+            raise RuntimeError(f"Unknown command: {cmd!r}") from e
 
 
 @dataclass
 class ParsedCommand:
     command: Command
-    args: List[str]
-    response: Optional[RESPValue]
-    raw_extra: Optional[bytes] = None
+    args: list[str]
+    response: RESPValue | None
+    raw_extra: bytes | None = None
     replication_response: bool = False
 
     def encode(self) -> bytes:

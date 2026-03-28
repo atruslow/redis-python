@@ -1,15 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
 
-
-CACHE: Dict[str, "CacheItem"] = {}
+CACHE: dict[str, "CacheItem"] = {}
 
 
 @dataclass
 class CacheItem:
     value: str
-    expiry: Optional[datetime] = None
+    expiry: datetime | None = None
 
     def set_expiry(self, exp: int) -> None:
         self.expiry = datetime.now(timezone.utc) + timedelta(milliseconds=exp)
@@ -23,7 +21,7 @@ class CacheItem:
         return self.expiry < datetime.now(timezone.utc)
 
 
-def get_key(key: str) -> Optional[str]:
+def get_key(key: str) -> str | None:
 
     if key not in CACHE:
         return None
@@ -35,7 +33,7 @@ def get_key(key: str) -> Optional[str]:
     return CACHE[key].value
 
 
-def set_key(key: str, value: str, exp: Optional[int] = None) -> str:
+def set_key(key: str, value: str, exp: int | None = None) -> str:
     cache_item = CacheItem(value=value)
 
     if exp:

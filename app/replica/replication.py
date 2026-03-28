@@ -1,17 +1,15 @@
-from asyncio import StreamReader, StreamWriter
 import asyncio
-from typing import List, Set, Tuple
+import logging
+from asyncio import StreamReader, StreamWriter
 
 from app import response
 from app.command.const import ParsedCommand
 from app.command.info import get_info
 from app.parser import parser as resp_parser
 
-import logging
-
 logger = logger = logging.getLogger(__name__)
 
-REPLICA_STREAMS: Set[Tuple[StreamWriter, StreamReader]] = set()
+REPLICA_STREAMS: set[tuple[StreamWriter, StreamReader]] = set()
 
 
 async def num_replicas(requested: int, timeout: int) -> int:
@@ -111,6 +109,6 @@ async def _poll_replicas(writer: StreamWriter, reader: StreamReader) -> None:
         await asyncio.sleep(0.05)
 
 
-def _encode(cmd: List[str]) -> bytes:
+def _encode(cmd: list[str]) -> bytes:
 
     return resp_parser.encode([a.encode() for a in cmd])

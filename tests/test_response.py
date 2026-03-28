@@ -1,7 +1,8 @@
+import pytest
+
 from app import response
 from app.command.const import Command, ParsedCommand
 from app.parser.parser import RESPParseError
-import pytest
 
 
 @pytest.mark.asyncio
@@ -75,3 +76,27 @@ async def test_response_non_array_raises():
 async def test_response_unknown_command_raises():
     with pytest.raises(RuntimeError):
         await response.parse("*1\r\n$7\r\nunknown\r\n")
+
+
+@pytest.mark.asyncio
+async def test_response_parses_info():
+    result = await response.parse("*2\r\n$4\r\nINFO\r\n$11\r\nreplication\r\n")
+    assert result.command == Command.Info
+    assert b"role" in result.response
+
+
+@pytest.mark.asyncio
+async def test_response_parses_psync():
+    result = await response.parse("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n")
+    assert result.command == Command.Psync
+    assert "FULLRESYNC" in result.response
+
+
+@pytest.mark.asyncio
+async def test_response_parses_wait():
+    from app.replica import replication
+
+    replication.REPLICA_STREAMS.clear()
+    result = await response.parse("*3\r\n$4\r\nWAIT\r\n$1\r\n1\r\n$3\r\n500\r\n")
+    assert result.command == Command.Wait
+    assert result.response == 0

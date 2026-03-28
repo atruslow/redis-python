@@ -1,15 +1,14 @@
 import argparse
-import logging
-import sys
 import asyncio
+import logging
 import re
-from typing import Tuple
+import sys
 
 from app.command.const import Command, ParsedCommand
-from app.command.info import ReplicationRole, init_info, get_info
-from app.response import parse_command
-from app.replica import handshake, replication
+from app.command.info import ReplicationRole, get_info, init_info
 from app.parser import parser as resp_parser
+from app.replica import handshake, replication
+from app.response import parse_command
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -85,7 +84,7 @@ async def run_server(args: argparse.Namespace):
         await server.serve_forever()
 
 
-def _parse_host_port(arg_value: str) -> Tuple[str, str]:
+def _parse_host_port(arg_value: str) -> tuple[str, str]:
     if m := HOST_PORT_RE.match(arg_value):
         return m.group("host"), m.group("port")
     raise argparse.ArgumentTypeError(

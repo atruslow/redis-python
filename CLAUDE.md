@@ -26,6 +26,11 @@ python3 -m pytest -k test_response_parses  # single test by name
 ruff format
 ```
 
+**Linting:**
+```sh
+ruff check . --fix
+```
+
 **Type checking:**
 ```sh
 mypy .
@@ -76,7 +81,12 @@ The server is single-process, async (asyncio). Each client connection is handled
 
 - Don't use `assert` outside of tests
 - Run `ruff format` before committing
+- Run `ruff check . --fix` before committing
+- Run pytest before commiting, wih coverage
+  - Don't commit with lower than 90% test coverage
 - Run `mypy .` to check types — all files must pass cleanly
+- Docstrings: don't use block comment separators (`# ---`), use Python docstrings; every public function and class should have a docstring
+- Tests: write flat top-level functions (`def test_foo`), not classes, unless there's a specific reason to group (e.g. shared fixtures via `setup_method`)
 
 ## Codecrafter Instructions
 
