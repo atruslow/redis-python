@@ -1,4 +1,3 @@
-
 from app.cache.cache import set_key
 from app.command.const import Command, ParsedCommand
 

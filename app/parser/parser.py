@@ -93,7 +93,7 @@ def parse(data: bytes) -> tuple[RESPValue, int]:
     prefix = chr(data[0])
     try:
         resp_type = RESPType(prefix)
-    except ValueError as e :
+    except ValueError as e:
         raise RESPParseError(f"Unknown RESP type prefix: {prefix!r}") from e
 
     match resp_type:

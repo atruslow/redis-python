@@ -1,4 +1,3 @@
-
 from app.command import get, info, psync, replconf, set, wait
 from app.command.const import Command, ParsedCommand
 from app.parser import parser as resp_parser

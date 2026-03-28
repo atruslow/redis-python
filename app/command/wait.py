@@ -1,4 +1,3 @@
-
 from app.command.const import Command, ParsedCommand
 from app.replica import replication
 

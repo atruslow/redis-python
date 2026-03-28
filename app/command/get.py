@@ -2,7 +2,6 @@
 Module for handling the get command
 """
 
-
 from app.cache import cache
 from app.command.const import Command, ParsedCommand
 
