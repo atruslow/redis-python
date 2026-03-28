@@ -1,9 +1,7 @@
-from typing import List
 
-from app.command.const import Command, ParsedCommand
 from app.command import get, info, psync, replconf, set, wait
+from app.command.const import Command, ParsedCommand
 from app.parser import parser as resp_parser
-from app.replica import replication
 
 
 async def parse(msg: str) -> ParsedCommand:
@@ -15,7 +13,7 @@ async def parse(msg: str) -> ParsedCommand:
     return await parse_command(args)
 
 
-async def parse_command(msg: List[str]) -> ParsedCommand:
+async def parse_command(msg: list[str]) -> ParsedCommand:
     cmd, *rest = msg
     command = Command.get_command(cmd)
 

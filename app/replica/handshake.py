@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Tuple
 
 from app.parser import parser as resp_parser
 
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 async def handshake(
     master_host: str, master_port: str, server_port: str
-) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
     """
     Completes a handshake with the master if we are a slave
     """

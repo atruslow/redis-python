@@ -11,9 +11,9 @@ from app.parser.parser import (
     encode_bulk_string,
     parse,
     parse_all,
+    parse_list,
     parse_str,
 )
-
 
 # ---------------------------------------------------------------------------
 # Parser — Simple String
@@ -323,3 +323,28 @@ class TestRoundTrip:
         decoded, _ = parse(encoded)
         assert isinstance(decoded, RESPError)
         assert decoded.message == err.message
+
+
+class TestParseList:
+    def test_valid(self):
+        result = parse_list("*2\r\n+foo\r\n+bar\r\n")
+        assert result == ["foo", "bar"]
+
+    def test_not_array_raises(self):
+        with pytest.raises(ValueError, match="Incorrect Data"):
+            parse_list("+OK\r\n")
+
+    def test_array_with_non_strings_raises(self):
+        with pytest.raises(ValueError, match="Incorrect Data"):
+            parse_list("*1\r\n:42\r\n")
+
+
+class TestParseErrors:
+    def test_invalid_bulk_string_length(self):
+        with pytest.raises(RESPParseError, match="Invalid bulk string length"):
+            parse(b"$abc\r\nhello\r\n")
+
+    def test_invalid_array_count(self):
+        with pytest.raises(RESPParseError, match="Invalid array count"):
+            parse(b"*abc\r\n")
+

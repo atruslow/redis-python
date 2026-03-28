@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from app.command.const import Command, ParsedCommand
 from app.command.info import get_info
@@ -7,7 +6,7 @@ from app.command.info import get_info
 logger = logging.getLogger(__name__)
 
 
-async def handle_replconf(args: List[str]) -> ParsedCommand:
+async def handle_replconf(args: list[str]) -> ParsedCommand:
     option, *values = args
     logger.info(f"REPLCONF {option} {' '.join(values)}")
 

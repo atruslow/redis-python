@@ -1,9 +1,14 @@
 import pytest
+
 from app.cache.cache import CACHE
-from app.command import set as set_cmd, get as get_cmd
+from app.command import get as get_cmd
+from app.command import info as info_cmd
+from app.command import psync as psync_cmd
+from app.command import replconf
+from app.command import set as set_cmd
+from app.command import wait as wait_cmd
 from app.command.const import Command, ParsedCommand
-from app.command.info import ReplicationRole, get_info
-from app.command import replconf, info as info_cmd
+from app.command.info import ReplicationInfo, ReplicationRole
 from app.parser import parser as resp_parser
 
 
@@ -157,3 +162,62 @@ async def test_parse_stream_multiple_commands():
     second = await resp_parser.parse_stream(reader)
     assert first == ["SET", "foo", "bar"]
     assert second == ["GET", "foo"]
+
+
+def test_replication_info_str():
+    info = ReplicationInfo()
+    result = str(info)
+    assert "role:master" in result
+    assert "master_repl_offset:0" in result
+
+
+def test_replication_info_as_dict():
+    info = ReplicationInfo()
+    d = info.as_dict()
+    assert d["role"] == "master"
+    assert d["master_repl_offset"] == 0
+
+
+def test_replication_info_increment_offset(initialize_info):
+    from app.command.info import get_info
+
+    get_info().increment_offset(31)
+    assert get_info().master_repl_offset == 31
+
+
+@pytest.mark.asyncio
+async def test_handle_info(initialize_info):
+    result = await info_cmd.handle_info(["replication"])
+    assert result.command == Command.Info
+    assert b"role:master" in result.response
+
+
+def test_get_info_raises_when_not_initialized():
+    import app.command.info as info_module
+
+    original = info_module.REPLICATION_INFO
+    info_module.REPLICATION_INFO = None
+    try:
+        with pytest.raises(RuntimeError, match="not been initialized"):
+            info_module.get_info()
+    finally:
+        info_module.REPLICATION_INFO = original
+
+
+@pytest.mark.asyncio
+async def test_handle_psync(initialize_info):
+    result = await psync_cmd.handle_psync(["?", "-1"])
+    assert result.command == Command.Psync
+    assert "FULLRESYNC" in result.response
+    assert result.raw_extra is not None
+    assert result.raw_extra.startswith(b"$")
+
+
+@pytest.mark.asyncio
+async def test_handle_wait_no_replicas(initialize_info):
+    from app.replica import replication
+
+    replication.REPLICA_STREAMS.clear()
+    result = await wait_cmd.handle_wait(["1", "500"])
+    assert result.command == Command.Wait
+    assert result.response == 0

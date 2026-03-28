@@ -1,4 +1,5 @@
 import pytest
+
 from app.command.info import ReplicationRole, init_info
 
 

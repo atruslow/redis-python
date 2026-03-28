@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass
 from enum import StrEnum, auto
-from typing import List, Optional
+from typing import Optional
 
 from app.command.const import Command, ParsedCommand
 
@@ -40,7 +40,7 @@ class ReplicationInfo:
         self.master_repl_offset += count
 
 
-async def handle_info(args: List[str]) -> ParsedCommand:
+async def handle_info(args: list[str]) -> ParsedCommand:
     """
     Returns the info requested from an INFO command
     """

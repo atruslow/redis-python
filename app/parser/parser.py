@@ -12,10 +12,10 @@ Supports the full RESP2 type set:
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Sequence, Union
-
+from typing import Union
 
 # ---------------------------------------------------------------------------
 # Types
@@ -58,11 +58,11 @@ class RESPParseError(ValueError):
 # ---------------------------------------------------------------------------
 
 
-def parse_list(data: str) -> List[str]:
+def parse_list(data: str) -> list[str]:
 
     value = parse_str(data)
 
-    if not isinstance(value, List) or not all(isinstance(i, str) for i in value):
+    if not isinstance(value, list) or not all(isinstance(i, str) for i in value):
         raise ValueError("Incorrect Data")
 
     return [str(i) for i in value]
@@ -93,8 +93,8 @@ def parse(data: bytes) -> tuple[RESPValue, int]:
     prefix = chr(data[0])
     try:
         resp_type = RESPType(prefix)
-    except ValueError:
-        raise RESPParseError(f"Unknown RESP type prefix: {prefix!r}")
+    except ValueError as e :
+        raise RESPParseError(f"Unknown RESP type prefix: {prefix!r}") from e
 
     match resp_type:
         case RESPType.SIMPLE_STRING:
@@ -109,9 +109,9 @@ def parse(data: bytes) -> tuple[RESPValue, int]:
             return _parse_array(data)
 
 
-def parse_all(data: bytes) -> List[RESPValue]:
+def parse_all(data: bytes) -> list[RESPValue]:
     """Parse all RESP values contained in *data* and return them as a list."""
-    values: List[RESPValue] = []
+    values: list[RESPValue] = []
     offset = 0
     while offset < len(data):
         value, consumed = parse(data[offset:])
@@ -120,7 +120,7 @@ def parse_all(data: bytes) -> List[RESPValue]:
     return values
 
 
-async def parse_stream(reader: asyncio.StreamReader) -> Optional[List[str]]:
+async def parse_stream(reader: asyncio.StreamReader) -> list[str] | None:
     """
     Read one complete RESP array command from *reader*.
     Returns a list of string args, or None on EOF.
@@ -165,16 +165,16 @@ def _parse_integer(data: bytes) -> tuple[int, int]:
     line, consumed = _read_line(data)
     try:
         return int(line), consumed
-    except ValueError:
-        raise RESPParseError(f"Invalid integer: {line!r}")
+    except ValueError as e:
+        raise RESPParseError(f"Invalid integer: {line!r}") from e
 
 
-def _parse_bulk_string(data: bytes) -> tuple[Optional[bytes], int]:
+def _parse_bulk_string(data: bytes) -> tuple[bytes | None, int]:
     length_line, header_consumed = _read_line(data)
     try:
         length = int(length_line)
-    except ValueError:
-        raise RESPParseError(f"Invalid bulk string length: {length_line!r}")
+    except ValueError as e:
+        raise RESPParseError(f"Invalid bulk string length: {length_line!r}") from e
 
     if length == -1:
         return None, header_consumed
@@ -187,17 +187,17 @@ def _parse_bulk_string(data: bytes) -> tuple[Optional[bytes], int]:
     return payload, total_needed
 
 
-def _parse_array(data: bytes) -> tuple[Optional[List[RESPValue]], int]:
+def _parse_array(data: bytes) -> tuple[list[RESPValue] | None, int]:
     count_line, header_consumed = _read_line(data)
     try:
         count = int(count_line)
-    except ValueError:
-        raise RESPParseError(f"Invalid array count: {count_line!r}")
+    except ValueError as e:
+        raise RESPParseError(f"Invalid array count: {count_line!r}") from e
 
     if count == -1:
         return None, header_consumed
 
-    elements: List[RESPValue] = []
+    elements: list[RESPValue] = []
     offset = header_consumed
     for _ in range(count):
         value, consumed = parse(data[offset:])
@@ -267,6 +267,6 @@ def _encode_bulk_string(value: bytes) -> bytes:
     return b"$" + str(len(value)).encode() + b"\r\n" + value + b"\r\n"
 
 
-def _encode_array(value: List[RESPValue]) -> bytes:
+def _encode_array(value: list[RESPValue]) -> bytes:
     header = f"*{len(value)}\r\n".encode()
     return header + b"".join(encode(item) for item in value)
