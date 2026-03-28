@@ -41,6 +41,5 @@ python3 -m app.main -p 6380 --replicaof "localhost 6379"
 ## Testing
 
 ```sh
-python3 -m pytest
-python3 -m pytest --cov  # with coverage
+sh check.sh
 ```
