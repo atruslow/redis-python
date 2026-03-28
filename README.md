@@ -2,7 +2,7 @@
 
 A toy Redis server built as part of the [CodeCrafters](https://codecrafters.io) challenge. Implemented in Python using `asyncio`, it speaks the Redis wire protocol (RESP2) and supports both master and replica roles.
 
-I built this with Claude, but did most of the coding and architecture myself. I used Claude for refactoring and debugging.
+I built this with Claude, but did most of the coding and architecture myself. I used Claude for refactoring and debugging, etc.
 
 ## Supported Commands
 
